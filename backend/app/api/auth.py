@@ -13,7 +13,6 @@ from flask_jwt_extended import (
 from app.services.auth_service import login_user, register_user
 from app.services.user_service import get_user_by_id
 from app.core.exceptions import NotFoundError
-from app.services.storage_service import get_image
 
 logger = logging.getLogger(__name__)
 auth = Blueprint("auth", __name__)
@@ -38,6 +37,7 @@ def sign_in():
     access_token = create_access_token(identity=user_id)
     refresh_token = create_refresh_token(identity=user_id)
     response = jsonify({"success": True, "message": result["message"]})
+
     set_access_cookies(response, access_token)
     set_refresh_cookies(response, refresh_token)
     return response, 200
