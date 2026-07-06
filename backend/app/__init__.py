@@ -1,0 +1,49 @@
+import os 
+import logging
+
+from flask import Flask, jsonify
+from app.core.exceptions import AppError
+from flask_cors import CORS
+from flask_jwt_extended import JWTManager
+from app.core.camera_monitor import start_monitor
+from app.api.cameras import cameras
+from app.api.auth import auth
+from app.api.users import users
+from app.api.storage import storage
+from datetime import timedelta
+from app.utils.auth.jwt_handlers import register_jwt_callbacks
+from app.core.error_handlers import register_error_handlers
+
+IS_PROD = os.getenv("FLASK_ENV") == "production"
+
+logger = logging.getLogger(__name__)
+
+def create_app():
+    app = Flask(__name__)
+
+    app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY")
+    app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(minutes=15)
+    app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(hours=8)
+    app.config["JWT_TOKEN_LOCATION"] = ["cookies"]
+    app.config["JWT_ACCESS_COOKIE_NAME"] = "access_token_cookie"
+    app.config["JWT_REFRESH_COOKIE_NAME"] = "refresh_token_cookie"
+    app.config["JWT_COOKIE_SECURE"] = IS_PROD
+    app.config["JWT_COOKIE_SAMESITE"] = "Lax"
+    app.config["JWT_COOKIE_HTTPONLY"] = True
+    app.config["JWT_COOKIE_CSRF_PROTECT"] = False
+
+    jwt = JWTManager(app)
+
+    register_jwt_callbacks(jwt)
+    register_error_handlers(app)
+
+    CORS(app, supports_credentials=True, origins=["http://localhost:3000"])
+
+    app.register_blueprint(cameras)
+    app.register_blueprint(auth)
+    app.register_blueprint(users)
+    app.register_blueprint(storage)
+
+    start_monitor()
+
+    return app

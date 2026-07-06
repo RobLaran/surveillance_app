@@ -1,0 +1,110 @@
+from app.core.exceptions import ConflictError, NotFoundError, ValidationError
+from app.utils.auth.validators import validate_user_update_fields
+from app.utils.auth.sanitizers import sanitize_user_update_fields
+from .supabase_client import supabase
+
+def get_all_users():
+    """Fetch all users from the database."""
+    response = supabase.table("users").select("*").execute()
+    return response.data or []
+   
+def get_user_by_id(user_id: str):
+    """"Fetches user info by id"""
+    if not user_id:
+        raise NotFoundError("No user id")
+
+    response = supabase.table("users").select("*").eq("user_id", user_id).limit(1).execute()
+    if response.data:
+        return response.data[0]
+
+    return None
+
+def get_user_by_email(email: str):
+    """"Fetches user info by email"""
+    if not email:
+        raise ValidationError(errors=["Email required"])
+
+    response = supabase.table("users").select("*").eq("email", email).limit(1).execute()
+
+    if response.data and len(response.data) > 0:
+        return response.data[0]
+
+    return None
+  
+    
+def email_exists(email: str) -> bool:
+    """"Checks db if email already used"""
+    result = (
+        supabase.table("users")
+        .select("user_id")
+        .eq("email", email)
+        .limit(1)
+        .execute()
+    )
+
+    return len(result.data) > 0
+   
+
+def create_user(data: dict):
+    """"Creates user/Insert user into database"""
+    response = (supabase
+        .table("users")
+        .insert({
+            "first_name": data['first_name'],
+            "last_name": data['last_name'],
+            "email": data['email'],
+            "password_hash": data['password_hash'],
+        })
+        .execute())
+    
+    return response.data[0] if response.data else None
+
+def update_user(user_id: str, data: dict):
+    """"Updates user info"""
+    if not user_id:
+        raise NotFoundError("No user id")
+    elif not data:
+        raise ValidationError(errors=["Request body is required"])
+    
+    data = sanitize_user_update_fields(data)
+
+    is_valid, errors = validate_user_update_fields(data)
+    if not is_valid:
+        raise ValidationError(errors=errors)
+    
+    user = get_user_by_id(user_id)
+    current_email = user.get("email")
+    new_email = data.get("email")
+
+    if current_email != new_email:
+        existing_user = get_user_by_email(new_email)
+
+        if existing_user:
+            raise ConflictError("Email already in use")
+    
+    response = (supabase
+        .table("users")
+        .update({
+            "first_name": data['first_name'],
+            "last_name": data['last_name'],
+            "email": data['email'],
+            "phone_number": data['phone_number'],
+            "location": data['location'],
+        })
+        .eq("user_id", user_id)
+        .execute())
+    
+    return response.data[0] if response.data else None
+
+  
+def update_user_avatar(user_id, avatar_path):
+    """"Updates user avatar"""
+    response = (
+        supabase.table("users")
+        .update({"avatar_path": avatar_path})
+        .eq("user_id", user_id)
+        .execute()
+    )
+
+    return response
+

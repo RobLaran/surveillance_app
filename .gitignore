@@ -1,0 +1,84 @@
+# ==========================================
+# ROOT
+# ==========================================
+
+plan.txt
+.vscode
+
+# ==========================================
+# BACKEND (Flask)
+# ==========================================
+
+backend/venv/
+backend/.venv/
+backend/env/
+backend/__pycache__/
+backend/*.py[cod]
+backend/.pytest_cache/
+backend/.mypy_cache/
+
+backend/.env
+backend/.env.*
+
+# ==========================================
+# FRONTEND (Next.js)
+# ==========================================
+
+frontend/AGENTS.md
+frontend/CLAUDE.md
+frontend/README.md
+
+# Dependencies
+frontend/node_modules/
+frontend/.pnp
+frontend/.pnp.*
+frontend/.yarn/*
+!frontend/.yarn/patches
+!frontend/.yarn/plugins
+!frontend/.yarn/releases
+!frontend/.yarn/versions
+
+# Testing
+frontend/coverage/
+
+# Next.js
+frontend/.next/
+frontend/out/
+
+# Production
+frontend/build/
+
+# Environment
+frontend/.env.local
+frontend/.env*
+!frontend/.env.example
+
+# Vercel
+frontend/.vercel/
+
+# TypeScript
+frontend/*.tsbuildinfo
+frontend/next-env.d.ts
+
+# Debug logs
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/.pnpm-debug.log*
+
+# ==========================================
+# IDE
+# ==========================================
+
+.vscode/
+.idea/
+
+# ==========================================
+# OS
+# ==========================================
+
+.DS_Store
+Thumbs.db
+
+# Misc
+*.pem

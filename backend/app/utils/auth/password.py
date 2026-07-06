@@ -1,0 +1,12 @@
+import bcrypt
+
+def hash_password(password: str) -> str:
+    """"Hash a password using bcrypt"""
+    salt = bcrypt.gensalt()
+    password_hash = bcrypt.hashpw(password.encode("utf-8"), salt)
+    return password_hash.decode("utf-8")
+
+def verify_password(password: str, password_hash: str) -> bool:
+    """"Verify a password against a bcrypt hash"""
+    return bcrypt.checkpw(password.encode("utf-8"), password_hash.encode("utf-8"))
+
