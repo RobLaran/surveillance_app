@@ -10,6 +10,7 @@ from app.api.cameras import cameras
 from app.api.auth import auth
 from app.api.users import users
 from app.api.storage import storage
+from app.api.login_logs import login_logs
 from datetime import timedelta
 from app.utils.auth.jwt_handlers import register_jwt_callbacks
 from app.core.error_handlers import register_error_handlers
@@ -43,6 +44,7 @@ def create_app():
     app.register_blueprint(auth)
     app.register_blueprint(users)
     app.register_blueprint(storage)
+    app.register_blueprint(login_logs)
 
     start_monitor()
 

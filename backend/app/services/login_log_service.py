@@ -1,7 +1,7 @@
 from .supabase_client import supabase
 
 # =========================
-# LOGIN LOG
+# CREATE LOGIN LOG
 # =========================
 def create_login_log(
     user_id: str | None = None,
@@ -21,6 +21,48 @@ def create_login_log(
             "ip_address": ip_address,
             "user_agent": user_agent,
         })
+        .execute()
+    )
+
+    return response.data[0] if response.data else None
+
+# =========================
+# GET ALL LOGIN LOGS
+# =========================
+def get_all_login_logs() -> list:
+    response = (
+        supabase.table("login_logs")
+        .select("*")
+        .order("created_at", desc=True)
+        .execute()
+    )
+
+    return response.data or []
+
+# =========================
+# GET LOGIN LOGS OF ONE USER
+# =========================
+def get_user_login_logs(user_id: str) -> list:
+    response = (
+        supabase.table("login_logs")
+        .select("*")
+        .eq("user_id", user_id)
+        .order("created_at", desc=True)
+        .execute()
+    )
+
+    return response.data or []
+
+# =========================
+# GET LATEST LOGIN LOG OF ONE USER
+# =========================
+def get_latest_login_log(user_id: str) -> dict | None:
+    response = (
+        supabase.table("login_logs")
+        .select("*")
+        .eq("user_id", user_id)
+        .order("created_at", desc=True)
+        .limit(1)
         .execute()
     )
 
