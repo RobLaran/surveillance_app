@@ -58,8 +58,8 @@ export function TopNavbar({ onMenuClick, alertCount = 3 }) {
     }, []);
 
     const initials = useMemo(() => {
-        if (!user?.first_name || !user?.last_name) return "AG";
-        return `${user.first_name[0]}${user.last_name[0]}`;
+        if (!user?.firsName || !user?.lastName) return "AG";
+        return `${user.firsName[0]}${user.lastName[0]}`;
     }, [user]);
 
     async function handleLogout() {
@@ -195,10 +195,10 @@ export function TopNavbar({ onMenuClick, alertCount = 3 }) {
                     <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon">
                             <Avatar className="h-8 w-8">
-                                {user?.avatar_url && (
+                                {user?.avatarUrl && (
                                     <AvatarImage
-                                        src={user.avatar_url}
-                                        alt={`${user.first_name} ${user.last_name}`}
+                                        src={user.avatarUrl}
+                                        alt={`${user.firstName} ${user.lastName}`}
                                     />
                                 )}
 
@@ -216,7 +216,7 @@ export function TopNavbar({ onMenuClick, alertCount = 3 }) {
                                     {isLoading
                                         ? "Loading..."
                                         : user
-                                          ? `${user.first_name} ${user.last_name}`
+                                          ? `${user.firstName} ${user.lastName}`
                                           : "Guest"}
                                 </span>
 

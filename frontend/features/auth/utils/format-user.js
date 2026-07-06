@@ -1,4 +1,4 @@
-import { formatDateMDY } from "@/utils/format-date";
+import { formatDate } from "@/utils/format-date";
 
 export function formatUser(data) {
     return {
@@ -8,7 +8,8 @@ export function formatUser(data) {
         email: data?.email,
         phone: data?.phone_number,
         location: data?.location,
-        joinDate: formatDateMDY(data?.created_at),
-        lastLogin: "Today at 2:45 PM",
+        avatarUrl: data?.avatar_url,
+        joinDate: formatDate(data?.created_at),
+        lastLogin: formatDate(data?.login_log?.created_at, "PPPppp"),
     };
 }

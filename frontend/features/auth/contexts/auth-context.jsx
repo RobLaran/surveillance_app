@@ -15,6 +15,7 @@ import {
     logoutRequest,
 } from "@/features/auth/services/auth-service";
 import { AUTH_STATUS } from "@/features/auth/constants/auth-status";
+import { formatUser } from "@/features/auth/utils/format-user";
 
 const AuthContext = createContext(null);
 
@@ -60,7 +61,7 @@ export function AuthProvider({ children }) {
                     return null;
                 }
 
-                setUser(currentUser);
+                setUser(formatUser(currentUser));
                 setStatus(AUTH_STATUS.AUTHENTICATED);
 
                 return currentUser;

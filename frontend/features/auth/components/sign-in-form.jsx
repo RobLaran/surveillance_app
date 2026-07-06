@@ -7,8 +7,6 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 import { signInAction } from "@/features/auth/actions/sign-in";
-import { useAuth } from "@/features/auth/contexts/auth-context";
-
 import { AuthLayout } from "@/features/auth/components/auth-layout";
 import { AuthCard } from "@/features/auth/components/auth-card";
 import { Logo } from "@/features/dashboard/components/logo";

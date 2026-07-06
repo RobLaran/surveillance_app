@@ -12,6 +12,7 @@ from flask_jwt_extended import (
 )
 from app.services.auth_service import login_user, register_user
 from app.services.user_service import get_user_by_id
+from app.services.login_log_service import get_latest_login_log
 from app.core.exceptions import NotFoundError
 
 logger = logging.getLogger(__name__)
@@ -36,7 +37,10 @@ def sign_in():
     user_id = result["user_id"]
     access_token = create_access_token(identity=user_id)
     refresh_token = create_refresh_token(identity=user_id)
-    response = jsonify({"success": True, "message": result["message"]})
+    response = jsonify({
+        "success": True, 
+        "message": result["message"]
+    })
 
     set_access_cookies(response, access_token)
     set_refresh_cookies(response, refresh_token)
@@ -50,7 +54,8 @@ def sign_in():
 @jwt_required()
 def me():
     user_id = get_jwt_identity()
-    user = get_user_by_id(user_id)
+    user = get_user_by_id(user_id=user_id)
+    login_log = get_latest_login_log(user_id=user_id)
 
     if not user:
         raise NotFoundError("User not found")
@@ -65,6 +70,7 @@ def me():
             "phone_number": user.get("phone_number"),
             "location": user.get("location"),
             "avatar": user.get("avatar_path"),
+            "login_log": login_log,
             "created_at": user.get("created_at"),
             "exp": get_jwt()["exp"],
         },

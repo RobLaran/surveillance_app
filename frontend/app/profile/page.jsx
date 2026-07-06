@@ -42,7 +42,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/features/auth/contexts/auth-context";
-import { formatDateMDY } from "@/utils/format-date";
+import { formatDate } from "@/utils/format-date";
 import { uploadAvatarAction } from "@/features/profile/actions/upload-avatar";
 import { removeAvatarAction } from "@/features/profile/actions/remove-avatar";
 import { updateCurrentUserAction } from "@/features/profile/actions/update-current-user";
@@ -64,14 +64,14 @@ export default function ProfilePage() {
         if (!user) return;
 
         setProfile({
-            id: user?.user_id,
-            name: user ? `${user?.first_name} ${user?.last_name}` : "",
+            id: user?.id,
+            name: user ? `${user?.firstName} ${user?.lastName}` : "",
             email: user?.email,
-            phone: user?.phone_number,
+            phone: user?.phone,
             location: user?.location,
-            joinDate: formatDateMDY(user?.created_at),
-            lastLogin: "Today at 2:45 PM",
-            avatar: user?.avatar_url,
+            joinDate: user?.joinDate,
+            lastLogin: user?.lastLogin,
+            avatar: user?.avatarUrl,
         });
     }, [user]);
 
@@ -442,7 +442,7 @@ export default function ProfilePage() {
                                             Last Login
                                         </p>
                                         <p className="text-sm text-foreground">
-                                            {profile?.lastLogin}
+                                            {profile?.lastLogin || "Never"}
                                         </p>
                                     </div>
                                     <Badge className="bg-green-500/10 text-green-500 border-0">

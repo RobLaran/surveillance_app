@@ -67,8 +67,9 @@ def login_user(data: dict):
     user_id = str(user["user_id"])
     email = user["email"]
 
+    login_log = None
     try :
-        create_login_log(
+        login_log = create_login_log(
             user_id=user_id,
             email=email,
             ip_address=get_client_ip(),
@@ -80,7 +81,8 @@ def login_user(data: dict):
     return {
         "success": True,
         "message": "Signed in successfully",
-        "user_id": user_id
+        "user_id": user_id,
+        "login_log": login_log
     }
 
 
