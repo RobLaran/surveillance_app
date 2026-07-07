@@ -46,6 +46,7 @@ import { formatDate } from "@/utils/format-date";
 import { uploadAvatarAction } from "@/features/profile/actions/upload-avatar";
 import { removeAvatarAction } from "@/features/profile/actions/remove-avatar";
 import { updateCurrentUserAction } from "@/features/profile/actions/update-current-user";
+import { ChangePasswordDialog } from "@/features/profile/components/change-password-dialog";
 import { toast } from "sonner";
 
 export default function ProfilePage() {
@@ -59,6 +60,7 @@ export default function ProfilePage() {
     const [selectedFile, setSelectedFile] = useState(null);
     const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
     const [isRemoveDialogOpen, setIsRemoveDialogOpen] = useState(false);
+    const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
 
     useEffect(() => {
         if (!user) return;
@@ -476,6 +478,7 @@ export default function ProfilePage() {
                             <Button
                                 variant="outline"
                                 className="w-full gap-2 justify-start"
+                                onClick={() => setIsChangePasswordOpen(true)}
                             >
                                 <Lock className="h-4 w-4" />
                                 Change Password
@@ -584,6 +587,12 @@ export default function ProfilePage() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+
+            {/* Change Password Dialog */}
+            <ChangePasswordDialog
+                open={isChangePasswordOpen}
+                onOpenChange={setIsChangePasswordOpen}
+            />
         </DashboardLayout>
     );
 }
