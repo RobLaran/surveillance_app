@@ -72,6 +72,7 @@ export default function ProfilePage() {
             joinDate: user?.joinDate,
             lastLogin: user?.lastLogin,
             avatar: user?.avatarUrl,
+            ipAddress: user?.ipAddress,
         });
     }, [user]);
 
@@ -430,7 +431,6 @@ export default function ProfilePage() {
                                             Account Created
                                         </p>
                                         <p className="text-sm text-foreground flex items-center gap-1">
-                                            <Calendar className="h-4 w-4 text-primary" />
                                             {profile?.joinDate}
                                         </p>
                                     </div>
@@ -445,9 +445,17 @@ export default function ProfilePage() {
                                             {profile?.lastLogin || "Never"}
                                         </p>
                                     </div>
-                                    <Badge className="bg-green-500/10 text-green-500 border-0">
-                                        Active
-                                    </Badge>
+                                </div>
+
+                                <div className="flex items-center justify-between p-3 rounded-lg bg-secondary/20">
+                                    <div className="space-y-1">
+                                        <p className="text-xs text-muted-foreground">
+                                            IP Address
+                                        </p>
+                                        <p className="text-sm text-foreground flex items-center gap-1">
+                                            {profile?.ipAddress}
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
                         </CardContent>

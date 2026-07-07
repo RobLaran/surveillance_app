@@ -60,10 +60,8 @@ export function AuthProvider({ children }) {
                 if (!mountedRef.current) {
                     return null;
                 }
-
                 setUser(formatUser(currentUser));
                 setStatus(AUTH_STATUS.AUTHENTICATED);
-
                 return currentUser;
             } catch (error) {
                 if (!mountedRef.current) {

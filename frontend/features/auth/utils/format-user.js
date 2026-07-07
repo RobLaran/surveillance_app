@@ -9,6 +9,8 @@ export function formatUser(data) {
         phone: data?.phone_number,
         location: data?.location,
         avatarUrl: data?.avatar_url,
+        ipAddress: data?.login_log?.ip_address,
+        userAgent: data?.login_log?.user_agent,
         joinDate: formatDate(data?.created_at),
         lastLogin: formatDate(data?.login_log?.created_at, "PPPppp"),
     };
