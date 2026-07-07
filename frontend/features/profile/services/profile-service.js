@@ -18,3 +18,7 @@ export async function getAvatar() {
 export async function updateCurrentUser(data) {
     return request.put("/api/users/me/update", data);
 }
+
+export async function changePasswordRequest(data) {
+    return request.put("api/users/me/change-password", data);
+}

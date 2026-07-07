@@ -122,7 +122,7 @@ def change_user_password(
     if not user_id:
         raise NotFoundError("No user id")
     elif not data:
-        raise ValidationError(errors=["Request body is required"])
+        raise ValidationError(errors={ "data": "Request body is required" })
     
     # Fetch user
     user = get_user_by_id(user_id=user_id)
@@ -132,14 +132,14 @@ def change_user_password(
         data["current_password"],
         user["password_hash"]
     ):
-       raise ValidationError(errors=["Current password is incorrect"])
+       raise ValidationError(errors={ "current_password": "Current password is incorrect" })
 
     # Check new and old password
     if verify_password(
         data["new_password"],
         user["password_hash"]
     ):
-        raise ValidationError(errors=["New password cannot be the same as the current password"])
+        raise ValidationError(errors={ "new_password": "New password cannot be the same as the current password" })
     
     # Hash new password
     hashed_password = hash_password(data["new_password"])

@@ -46,7 +46,4 @@ def change_password():
         data=request.get_json()
     )
 
-    if not result["success"]:
-        return jsonify(result), 400
-
     return jsonify(result), 200

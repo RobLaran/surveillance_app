@@ -21,7 +21,9 @@ import { PasswordStrengthBar } from "@/features/auth/components/password-strengt
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Eye, EyeOff, Check, X, Lock } from "lucide-react";
+import { Eye, EyeOff, Lock, Check, X } from "lucide-react";
+import { changePasswordAction } from "@/features/profile/actions/change-password.action";
+import { cn } from "@/lib/utils";
 
 type ChangePasswordDialogProps = {
     open: boolean;
@@ -29,9 +31,9 @@ type ChangePasswordDialogProps = {
 };
 
 type ChangePasswordForm = {
-    currentPassword: string;
-    newPassword: string;
-    confirmPassword: string;
+    current_password: string;
+    new_password: string;
+    confirm_password: string;
 };
 
 export function ChangePasswordDialog({
@@ -41,9 +43,9 @@ export function ChangePasswordDialog({
     const form = useForm<ChangePasswordForm>({
         mode: "onChange",
         defaultValues: {
-            currentPassword: "",
-            newPassword: "",
-            confirmPassword: "",
+            current_password: "",
+            new_password: "",
+            confirm_password: "",
         },
     });
 
@@ -62,8 +64,21 @@ export function ChangePasswordDialog({
 
     const newPassword = useWatch({
         control: form.control,
-        name: "newPassword",
+        name: "new_password",
     });
+
+    const confirmPassword = useWatch({
+        control: form.control,
+        name: "confirm_password",
+    });
+
+    const newPasswordError = form.formState.errors.new_password;
+
+    const passwordsMatch =
+        !!newPassword &&
+        !!confirmPassword &&
+        newPassword === confirmPassword &&
+        !newPasswordError;
 
     const {
         formState: { isSubmitting },
@@ -90,9 +105,26 @@ export function ChangePasswordDialog({
     };
 
     const onSubmit = async (values: ChangePasswordForm): Promise<void> => {
-        toast.success("Password changed");
+        const result = await changePasswordAction(values);
+
+        if (!result.success) {
+            if (result.errors) {
+                Object.entries(result.errors).forEach(([field, message]) => {
+                    form.setError(field as keyof ChangePasswordForm, {
+                        type: "server",
+                        message: String(message),
+                    });
+                });
+
+                return;
+            }
+
+            toast.error(result.message);
+            return;
+        }
+
+        toast.success(result.message || "Password changed");
         handleClose(false);
-        console.log(values);
     };
 
     return (
@@ -119,7 +151,7 @@ export function ChangePasswordDialog({
                         {/* Current Password */}
                         <FormField
                             control={form.control}
-                            name="currentPassword"
+                            name="current_password"
                             rules={{
                                 required: "Current password is required",
                             }}
@@ -164,7 +196,7 @@ export function ChangePasswordDialog({
                         {/* New Password */}
                         <FormField
                             control={form.control}
-                            name="newPassword"
+                            name="new_password"
                             rules={{
                                 required: "New password is required",
                                 minLength: {
@@ -187,7 +219,14 @@ export function ChangePasswordDialog({
                                                         : "password"
                                                 }
                                                 placeholder="••••••••"
-                                                className="pr-10"
+                                                className={cn(
+                                                    "pr-10",
+                                                    confirmPassword.length >
+                                                        0 &&
+                                                        (passwordsMatch
+                                                            ? "border-green-500 focus-visible:ring-green-500"
+                                                            : "border-red-500 focus-visible:ring-red-500"),
+                                                )}
                                             />
                                         </FormControl>
 
@@ -220,11 +259,11 @@ export function ChangePasswordDialog({
                         {/* Confirm Password */}
                         <FormField
                             control={form.control}
-                            name="confirmPassword"
+                            name="confirm_password"
                             rules={{
                                 required: "Please confirm your password",
                                 validate: (value) =>
-                                    value === form.getValues("newPassword") ||
+                                    value === form.getValues("new_password") ||
                                     "Passwords do not match",
                             }}
                             render={({ field }) => (
@@ -241,7 +280,14 @@ export function ChangePasswordDialog({
                                                         : "password"
                                                 }
                                                 placeholder="••••••••"
-                                                className="pr-10"
+                                                className={cn(
+                                                    "pr-10",
+                                                    confirmPassword.length >=
+                                                        4 &&
+                                                        (passwordsMatch
+                                                            ? "border-green-500 focus-visible:ring-green-500"
+                                                            : "border-red-500 focus-visible:ring-red-500"),
+                                                )}
                                             />
                                         </FormControl>
 
@@ -259,6 +305,15 @@ export function ChangePasswordDialog({
                                             )}
                                         </button>
                                     </div>
+
+                                    {confirmPassword && passwordsMatch && (
+                                        <div className="flex items-center gap-2 text-sm">
+                                            <Check className="h-4 w-4 text-green-500" />
+                                            <span className="font-medium text-green-500">
+                                                Passwords match
+                                            </span>
+                                        </div>
+                                    )}
 
                                     <div className="min-h-4">
                                         <FormMessage />

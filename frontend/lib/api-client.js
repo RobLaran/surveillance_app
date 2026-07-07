@@ -78,12 +78,11 @@ async function apiClientInternal(endpoint, options = {}, isRetry = false) {
     }
 
     if (!response.ok) {
-        const error = new Error(data?.message || `HTTP ${response.status}`);
-
-        error.status = response.status;
-        error.errors = data?.errors;
-
-        throw error;
+        throw {
+            message: data.message,
+            errors: data.errors,
+            status: response.status,
+        };
     }
 
     return { response, data };
