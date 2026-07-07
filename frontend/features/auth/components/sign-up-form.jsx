@@ -5,9 +5,8 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import Link from "next/link";
 
-import { signUpAction } from "../actions/sign-up";
-import { PasswordStrengthBar } from "./password-strength-bar";
-
+import { signUpAction } from "@/features/auth/actions/sign-up";
+import { PasswordStrengthBar } from "@/features/auth/components/password-strength-bar";
 import { AuthLayout } from "@/features/auth/components/auth-layout";
 import { AuthCard } from "@/features/auth/components/auth-card";
 import { Logo } from "@/features/dashboard/components/logo";
@@ -221,6 +220,7 @@ export function SignUpForm() {
                             control={form.control}
                             name="confirmPassword"
                             rules={{
+                                required: "Please confirm your password",
                                 validate: (value) =>
                                     value === form.watch("password") ||
                                     "Password does not match",

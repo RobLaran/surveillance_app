@@ -1,4 +1,7 @@
-import { formatDate } from "@/utils/format-date";
+import {
+    formatAccountCreatedSince,
+    formatLastLogin,
+} from "@/utils/format-date";
 
 export function formatUser(data) {
     return {
@@ -11,7 +14,7 @@ export function formatUser(data) {
         avatarUrl: data?.avatar_url,
         ipAddress: data?.login_log?.ip_address,
         userAgent: data?.login_log?.user_agent,
-        joinDate: formatDate(data?.created_at),
-        lastLogin: formatDate(data?.login_log?.created_at, "PPPppp"),
+        joinDate: formatAccountCreatedSince(data?.created_at),
+        lastLogin: formatLastLogin(data?.login_log?.created_at),
     };
 }

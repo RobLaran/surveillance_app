@@ -61,6 +61,7 @@ export default function ProfilePage() {
     const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
     const [isRemoveDialogOpen, setIsRemoveDialogOpen] = useState(false);
     const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
+    const [isLoginHistoryOpen, setIsLoginHistoryOpen] = useState(false);
 
     useEffect(() => {
         if (!user) return;
@@ -470,71 +471,51 @@ export default function ProfilePage() {
                                 <Lock className="h-5 w-5 text-primary" />
                                 Security
                             </CardTitle>
+
                             <CardDescription>
-                                Password and authentication
+                                Manage your account security settings.
                             </CardDescription>
                         </CardHeader>
+
                         <CardContent className="space-y-4">
                             <Button
                                 variant="outline"
-                                className="w-full gap-2 justify-start"
+                                className="w-full justify-start gap-2"
                                 onClick={() => setIsChangePasswordOpen(true)}
                             >
                                 <Lock className="h-4 w-4" />
                                 Change Password
                             </Button>
+
                             <Button
                                 variant="outline"
-                                className="w-full gap-2 justify-start"
+                                className="w-full justify-start gap-2"
+                                onClick={() => setIsLoginHistoryOpen(true)}
                             >
                                 <Shield className="h-4 w-4" />
-                                Enable Two-Factor Authentication
+                                View Login History
                             </Button>
-                            <Separator className="my-4" />
-                            <p className="text-xs text-muted-foreground">
-                                Last password change: 45 days ago
-                            </p>
+
+                            <Separator />
+
+                            <div className="space-y-1 text-sm">
+                                <p className="font-medium">Password</p>
+                                <p className="text-muted-foreground">
+                                    For security, use a unique password that you
+                                    don't use on other websites.
+                                </p>
+                            </div>
                         </CardContent>
                     </Card>
                 </div>
 
-                {/* Session & Logout */}
-                <Card className="border-border">
-                    <CardHeader>
-                        <CardTitle className="text-lg">
-                            Session Management
-                        </CardTitle>
-                        <CardDescription>
-                            Manage active sessions and logout
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="p-4 rounded-lg bg-secondary/20 border border-border">
-                            <div className="flex items-center justify-between">
-                                <div className="space-y-1">
-                                    <p className="font-medium text-foreground">
-                                        Current Session
-                                    </p>
-                                    <p className="text-xs text-muted-foreground">
-                                        Last active: 2 minutes ago
-                                    </p>
-                                </div>
-                                <Badge className="bg-green-500/10 text-green-500 border-0">
-                                    Active
-                                </Badge>
-                            </div>
-                        </div>
-                        <div className="flex flex-col sm:flex-row gap-3">
-                            <Button variant="outline" className="gap-2">
-                                Logout Other Sessions
-                            </Button>
-                            <Button variant="destructive" className="gap-2">
-                                <LogOut className="h-4 w-4" />
-                                Logout
-                            </Button>
-                        </div>
-                    </CardContent>
-                </Card>
+                {/* Logout Button */}
+                <div className="flex justify-end">
+                    <Button variant="destructive" className="gap-2">
+                        <LogOut className="h-4 w-4" />
+                        Logout
+                    </Button>
+                </div>
             </div>
 
             <AlertDialog
