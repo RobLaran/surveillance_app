@@ -1,7 +1,12 @@
+from .supabase_client import supabase
+
+from typing import Any
+
 from app.core.exceptions import ConflictError, NotFoundError, ValidationError
+
 from app.utils.auth.validators import validate_user_update_fields
 from app.utils.auth.sanitizers import sanitize_user_update_fields
-from .supabase_client import supabase
+from app.utils.auth.password import verify_password, hash_password
 
 def get_all_users():
     """Fetch all users from the database."""
@@ -108,3 +113,48 @@ def update_user_avatar(user_id, avatar_path):
 
     return response
 
+
+def change_user_password(
+    user_id: str,
+    data: dict[str, str],
+) -> dict[str, Any]:
+    """Change the authenticated user's password."""
+    if not user_id:
+        raise NotFoundError("No user id")
+    elif not data:
+        raise ValidationError(errors=["Request body is required"])
+    
+    # Fetch user
+    user = get_user_by_id(user_id=user_id)
+
+    # Verify current password
+    if not verify_password(
+        data["current_password"],
+        user["password_hash"]
+    ):
+       raise ValidationError(errors=["Current password is incorrect"])
+
+    # Check new and old password
+    if verify_password(
+        data["new_password"],
+        user["password_hash"]
+    ):
+        raise ValidationError(errors=["New password cannot be the same as the current password"])
+    
+    # Hash new password
+    hashed_password = hash_password(data["new_password"])
+
+    # Update database
+    (supabase
+     .table("users")
+     .update({
+         "password_hash": hashed_password
+     })
+     .eq("user_id", user_id)
+     .execute()
+    )
+
+    return {
+        "success": True,
+        "message": "Password updated successfully"
+    }

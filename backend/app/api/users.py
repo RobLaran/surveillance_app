@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from app.services.user_service import get_all_users, update_user
+from app.services.user_service import get_all_users, update_user, change_user_password
 from flask_jwt_extended import get_jwt_identity, jwt_required
 
 users = Blueprint('users', __name__)
@@ -30,5 +30,23 @@ def update_current_user():
     }
 
     result = update_user(user_id, payload)
+
+    return jsonify(result), 200
+
+# =========================
+# CHANGE USER PASSWORD
+# =========================
+@users.route("/api/users/me/change-password", methods=["PUT"])
+@jwt_required()
+def change_password():
+    user_id = get_jwt_identity()
+
+    result = change_user_password(
+        user_id=user_id,
+        data=request.get_json()
+    )
+
+    if not result["success"]:
+        return jsonify(result), 400
 
     return jsonify(result), 200
