@@ -61,7 +61,7 @@ export function PasswordStrengthBar({
                         key={i}
                         className={cn(
                             "h-1.5 flex-1 rounded-full transition-all duration-300",
-                            i < activeBars ? strengthColors[level] : "bg-muted"
+                            i < activeBars ? strengthColors[level] : "bg-muted",
                         )}
                     />
                 ))}
@@ -74,7 +74,7 @@ export function PasswordStrengthBar({
                         level === "weak" && "text-red-500",
                         level === "medium" && "text-orange-500",
                         level === "strong" && "text-green-500",
-                        level === "very-strong" && "text-emerald-500"
+                        level === "very-strong" && "text-emerald-500",
                     )}
                 >
                     {level.replace("-", " ")}
