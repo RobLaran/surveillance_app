@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useWatch, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import {
@@ -83,6 +83,18 @@ export function ChangePasswordDialog({
     const {
         formState: { isSubmitting },
     } = form;
+
+    // Keep confirm_password's RHF validation state in sync whenever
+    // new_password changes. Without this, RHF only re-validates
+    // confirm_password when confirm_password itself changes — so typing
+    // confirm_password first, then editing new_password to match, leaves
+    // a stale "Passwords do not match" error sitting in form state even
+    // though passwordsMatch (computed live above) has already flipped to true.
+    useEffect(() => {
+        if (form.getFieldState("confirm_password").isTouched) {
+            form.trigger("confirm_password");
+        }
+    }, [newPassword]);
 
     const resetDialog = () => {
         form.reset();
@@ -221,8 +233,8 @@ export function ChangePasswordDialog({
                                                 placeholder="••••••••"
                                                 className={cn(
                                                     "pr-10",
-                                                    confirmPassword.length >
-                                                        0 &&
+                                                    confirmPassword.length >=
+                                                        4 &&
                                                         (passwordsMatch
                                                             ? "border-green-500 focus-visible:ring-green-500"
                                                             : "border-red-500 focus-visible:ring-red-500"),
