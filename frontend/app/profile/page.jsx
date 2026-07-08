@@ -48,8 +48,10 @@ import { removeAvatarAction } from "@/features/profile/actions/remove-avatar";
 import { updateCurrentUserAction } from "@/features/profile/actions/update-current-user";
 import { ChangePasswordDialog } from "@/features/profile/components/change-password-dialog";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 export default function ProfilePage() {
+    const router = useRouter();
     const { user, logout, isLoading, loadUser } = useAuth();
     const [isEditing, isSetEditing] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
@@ -62,6 +64,7 @@ export default function ProfilePage() {
     const [isRemoveDialogOpen, setIsRemoveDialogOpen] = useState(false);
     const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
     const [isLoginHistoryOpen, setIsLoginHistoryOpen] = useState(false);
+    const [isLoggingOut, setIsLoggingOut] = useState(false);
 
     useEffect(() => {
         if (!user) return;
@@ -179,6 +182,19 @@ export default function ProfilePage() {
         await loadUser();
         setSelectedFile(null);
         setIsUploadDialogOpen(false);
+    }
+
+    async function handleLogout() {
+        if (isLoggingOut) return;
+
+        setIsLoggingOut(true);
+
+        try {
+            await logout();
+        } finally {
+            router.replace("/sign-in");
+            setIsLoggingOut(false);
+        }
     }
 
     return (
@@ -511,7 +527,11 @@ export default function ProfilePage() {
 
                 {/* Logout Button */}
                 <div className="flex justify-end">
-                    <Button variant="destructive" className="gap-2">
+                    <Button
+                        variant="destructive"
+                        className="gap-2"
+                        onClick={handleLogout}
+                    >
                         <LogOut className="h-4 w-4" />
                         Logout
                     </Button>
