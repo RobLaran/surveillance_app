@@ -69,7 +69,8 @@ def me():
     
     return jsonify({
         "success": True,
-        "user": {
+        "message": "Fetched user successfully",
+        "data": {
             "user_id": user.get("user_id"),
             "first_name": user.get("first_name"),
             "last_name": user.get("last_name"),
@@ -77,7 +78,9 @@ def me():
             "phone_number": user.get("phone_number"),
             "location": user.get("location"),
             "avatar": user.get("avatar_path"),
-            "login_log": login_log,
+            "last_login": login_log.get("created_at"),
+            "ip_address": login_log.get("ip_address"),
+            "user_agent": login_log.get("user_agent"),
             "created_at": user.get("created_at"),
             "exp": get_jwt()["exp"],
         },

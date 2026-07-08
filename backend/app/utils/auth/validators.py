@@ -118,12 +118,18 @@ def validate_confirm_password(password: str, confirm_password: str):
     return True, None
 
 def validate_phone_number(phone_number: str):
+    if is_blank(phone_number):
+        return True, None
+
     if phone_number and not re.match(PHONE_PATTERN, phone_number):
         return False, "Invalid phone number format"
 
     return True, None
 
 def validate_location(location: str):
+    if is_blank(location):
+        return True, None
+
     if location and not has_valid_length(
         location,
         LOCATION_MIN,

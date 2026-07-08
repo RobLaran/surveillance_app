@@ -87,7 +87,7 @@ def update_user(user_id: str, data: dict):
         if existing_user:
             raise ConflictError("Email already in use")
     
-    response = (supabase
+    (supabase
         .table("users")
         .update({
             "first_name": data['first_name'],
@@ -97,9 +97,16 @@ def update_user(user_id: str, data: dict):
             "location": data['location'],
         })
         .eq("user_id", user_id)
-        .execute())
+        .execute()
+    )
     
-    return response.data[0] if response.data else None
+    return {
+        "success": True,
+        "message": "User updated successfully",
+        "data": {
+            "user_id": user_id
+        }
+    }
 
   
 def update_user_avatar(user_id, avatar_path):

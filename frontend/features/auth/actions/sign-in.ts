@@ -1,14 +1,17 @@
-import { AuthResult, SignInValues } from "@/features/auth/types/auth";
+import { SignInValues } from "@/features/auth/types/auth";
 import { signInRequest } from "@/features/auth/services/auth-service";
+import { ActionResult } from "@/types/action-result";
 import type { ApiError } from "@/lib/api-client";
 
-export async function signInAction(values: SignInValues): Promise<AuthResult> {
+export async function signInAction(
+    values: SignInValues,
+): Promise<ActionResult> {
     try {
-        const { data } = await signInRequest(values);
+        const message = await signInRequest(values);
 
         return {
             success: true,
-            message: data.message ?? "Signed in successfully",
+            message: message,
         };
     } catch (error) {
         const err = error as ApiError;
@@ -17,7 +20,6 @@ export async function signInAction(values: SignInValues): Promise<AuthResult> {
             success: false,
             message: err.message,
             errors: err.errors,
-            status: err.status,
         };
     }
 }

@@ -58,8 +58,8 @@ export function TopNavbar({ onMenuClick, alertCount = 3 }) {
     }, []);
 
     const initials = useMemo(() => {
-        if (!user?.firsName || !user?.lastName) return "AG";
-        return `${user.firsName[0]}${user.lastName[0]}`;
+        if (!user?.firstName || !user?.lastName) return "AG";
+        return `${user.firstName[0]}${user.lastName[0]}`;
     }, [user]);
 
     async function handleLogout() {
@@ -195,12 +195,14 @@ export function TopNavbar({ onMenuClick, alertCount = 3 }) {
                     <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon">
                             <Avatar className="h-8 w-8">
-                                {user?.avatarUrl && (
-                                    <AvatarImage
-                                        src={user.avatarUrl}
-                                        alt={`${user.firstName} ${user.lastName}`}
-                                    />
-                                )}
+                                <AvatarImage
+                                    src={user?.avatarUrl || undefined}
+                                    alt={
+                                        user
+                                            ? `${user.firstName} ${user.lastName}`
+                                            : "User avatar"
+                                    }
+                                />
 
                                 <AvatarFallback className="bg-primary/10 text-primary text-sm">
                                     {initials}

@@ -2,11 +2,10 @@ from .supabase_client import supabase
 import os
 
 def upload_image(image, image_path, content_type="image/*"):
-    try:
         bucket = supabase.storage.from_("avatars")
 
         # Upload with overwrite enabled (NO need for exists check)
-        response = bucket.upload(
+        bucket.upload(
             image_path,
             image,
             {
@@ -15,46 +14,23 @@ def upload_image(image, image_path, content_type="image/*"):
             }
         )
 
-        # Supabase Python sometimes returns dict or object depending on version
-        if hasattr(response, "error") and response.error:
-            return {
-                "success": False,
-                "message": str(response.error)
-            }
-
         return {
             "success": True,
             "message": "Image uploaded successfully",
-            "path": image_path
-        }
-
-    except Exception as e:
-        return {
-            "success": False,
-            "message": str(e)
+            "data": {
+                "path": image_path
+            }
         }
     
 def remove_image(paths: list):
-    try:
-        bucket = supabase.storage.from_("avatars")
-
-        result = bucket.remove(paths)
-
-        if hasattr(result, "error") and result.error:
-            return {
-                "success": False,
-                "message": str(result.error)
-            }
-        
-        return {
-            "success": True,
-            "message": "Avatar removed successfully"
-        }
-    except Exception as e:
-        return {
-            "success": False,
-            "message": str(e)
-        }
+    bucket = supabase.storage.from_("avatars")
+    bucket.remove(paths)
+    
+    return {
+        "success": True,
+        "message": "Avatar removed successfully"
+    }
+   
     
 def get_image(path):
     try:
@@ -73,8 +49,11 @@ def get_image(path):
 
         return {
             "success": True,
-            "path": path,
-            "url": result["signedURL"]
+            "message": "Image received",
+            "data": {
+                "path": path,
+                "url": result["signedURL"]
+            }
         }
 
     except Exception as e:

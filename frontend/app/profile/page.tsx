@@ -49,6 +49,11 @@ import { updateCurrentUserAction } from "@/features/profile/actions/update-curre
 import { ChangePasswordDialog } from "@/features/profile/components/change-password-dialog";
 import { LoginHistoryDialog } from "@/features/profile/components/login-history-dialog";
 import { getUserLoginLogs } from "@/features/profile/services/profile-service";
+import type {
+    Profile,
+    LoginLog,
+    EditedProfile,
+} from "@/features/profile/types/profile";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
@@ -62,6 +67,7 @@ const EMPTY_PROFILE: Profile = {
     lastLogin: null,
     avatar: null,
     ipAddress: "",
+    userAgent: "",
 };
 
 export default function ProfilePage() {
@@ -96,6 +102,7 @@ export default function ProfilePage() {
             lastLogin: user.lastLogin,
             avatar: user.avatarUrl,
             ipAddress: user.ipAddress,
+            userAgent: user.userAgent,
         };
 
         setProfile(profileData);
@@ -295,7 +302,7 @@ export default function ProfilePage() {
                             <div className="flex flex-col items-center gap-4">
                                 <Avatar className="h-24 w-24 border-2 border-primary">
                                     <AvatarImage
-                                        src={profile?.avatar ?? undefined}
+                                        src={profile?.avatar || undefined}
                                         alt={profile?.name}
                                     />
                                     <AvatarFallback>
@@ -407,7 +414,7 @@ export default function ProfilePage() {
                                     {isEditing ? (
                                         <Input
                                             type="tel"
-                                            value={editedProfile?.phone}
+                                            value={editedProfile?.phone ?? ""}
                                             onChange={(e) =>
                                                 handleInputChange(
                                                     "phone",
@@ -431,7 +438,9 @@ export default function ProfilePage() {
                                     </Label>
                                     {isEditing ? (
                                         <Input
-                                            value={editedProfile?.location}
+                                            value={
+                                                editedProfile?.location ?? ""
+                                            }
                                             onChange={(e) =>
                                                 handleInputChange(
                                                     "location",

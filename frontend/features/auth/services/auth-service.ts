@@ -8,19 +8,23 @@ import type {
 } from "@/features/auth/types/auth";
 
 export async function fetchCurrentUser(): Promise<CurrentUser> {
-    const { data } = await request.get<CurrentUserResponse>("/api/auth/me");
+    const { data } = await request.get<CurrentUser>("/api/auth/me");
 
-    if (data.user.avatar) {
-        data.user.avatar_url = await getAvatar();
-    }
+    if (data.avatar) {
+        data.avatar_url = await getAvatar();
+    }   
 
-    return data.user;
+    return data;
 }
 
-export async function signInRequest(credentials: SignInValues) {
-    return request.post("/api/auth/sign-in", credentials, {
+export async function signInRequest(
+    credentials: SignInValues,
+): Promise<string> {
+    const { message } = await request.post("/api/auth/sign-in", credentials, {
         auth: false,
     });
+
+    return message;
 }
 
 export async function signUpRequest(payload: SignUpValues) {

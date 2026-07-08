@@ -2,14 +2,28 @@ import { API_ERRORS } from "@/constants/api-errors";
 
 let refreshPromise: Promise<boolean> | null = null;
 
-export interface ApiError {
-    message: string;
-    errors?: Record<string, string> | string[];
+export class ApiError extends Error {
     status: number;
+    errors?: Record<string, string> | string[];
+
+    constructor(
+        message: string,
+        status: number,
+        errors?: Record<string, string> | string[],
+    ) {
+        super(message);
+        this.name = "ApiError";
+        this.status = status;
+        this.errors = errors;
+    }
 }
 
-export interface ApiResponseBody {
-    message?: string;
+// Every backend response follows this envelope:
+// { success, message, data?, errors? }
+export interface ApiResponseBody<TData = unknown> {
+    success: boolean;
+    message: string;
+    data?: TData;
     errors?: Record<string, string> | string[];
 }
 
@@ -17,9 +31,9 @@ type ApiOptions = RequestInit & {
     auth?: boolean;
 };
 
-type ApiResponse<T = unknown> = {
-    response: Response;
-    data: T;
+type ApiSuccessResponse<TData = void> = {
+    message: string;
+    data: TData;
 };
 
 // =========================
@@ -41,11 +55,11 @@ async function refreshAccessToken(): Promise<boolean> {
 // =========================
 // API CLIENT
 // =========================
-async function apiClientInternal<T extends ApiResponseBody = ApiResponseBody>(
+async function apiClientInternal<TData = unknown>(
     endpoint: string,
     options: ApiOptions = {},
     isRetry = false,
-): Promise<ApiResponse<T>> {
+): Promise<ApiSuccessResponse<TData>> {
     const { auth = true, ...fetchOptions } = options;
 
     const controller = new AbortController();
@@ -62,6 +76,11 @@ async function apiClientInternal<T extends ApiResponseBody = ApiResponseBody>(
             credentials: "include",
             signal: controller.signal,
         });
+    } catch (err) {
+        if (err instanceof DOMException && err.name === "AbortError") {
+            throw new Error(API_ERRORS.TIMEOUT ?? "Request timed out");
+        }
+        throw err;
     } finally {
         clearTimeout(timeout);
     }
@@ -74,7 +93,7 @@ async function apiClientInternal<T extends ApiResponseBody = ApiResponseBody>(
         refreshPromise = null;
 
         if (refreshed) {
-            return apiClientInternal<T>(endpoint, options, true);
+            return apiClientInternal<TData>(endpoint, options, true);
         }
 
         if (
@@ -92,112 +111,112 @@ async function apiClientInternal<T extends ApiResponseBody = ApiResponseBody>(
         throw new Error(API_ERRORS.INTERNAL_SERVER_ERROR);
     }
 
-    let data: T | null = null;
+    let body: ApiResponseBody<TData> | null = null;
 
     try {
-        data = (await response.json()) as T;
+        body = (await response.json()) as ApiResponseBody<TData>;
     } catch {
         // Ignore empty response body
     }
 
-    if (!response.ok) {
-        const error: ApiError = {
-            message: data?.message ?? "Request failed",
-            errors: data?.errors,
-            status: response.status,
-        };
+    // Two independent failure signals from the backend:
+    // 1. HTTP status not ok (e.g. 401, 404, 422, 409)
+    // 2. Body says success: false, even on a 200 (defensive — in case
+    //    any route ever returns 200 with a logical failure body)
+    if (!response.ok || body?.success === false) {
+        throw new ApiError(
+            body?.message ?? "Request failed",
+            response.status,
+            body?.errors,
+        );
+    }
 
-        throw error;
+    if (!body) {
+        throw new ApiError("Empty response from server", response.status);
     }
 
     return {
-        response,
-        data: data as T,
+        message: body.message,
+        data: body.data as TData,
+    };
+}
+
+// Merge extra headers/body out of `options` BEFORE spreading the rest,
+// so a caller-supplied header (e.g. Authorization) can't silently wipe
+// out Content-Type or the request body we just built.
+function buildBodyOptions(
+    method: string,
+    data: unknown,
+    options: ApiOptions,
+): ApiOptions {
+    const {
+        headers: extraHeaders,
+        body: _ignoredBody,
+        ...restOptions
+    } = options;
+    const isFormData = data instanceof FormData;
+
+    return {
+        method,
+        headers: isFormData
+            ? extraHeaders
+            : {
+                  "Content-Type": "application/json",
+                  ...extraHeaders,
+              },
+        body:
+            data == null
+                ? undefined
+                : isFormData
+                  ? (data as FormData)
+                  : JSON.stringify(data),
+        ...restOptions,
     };
 }
 
 export const request = {
-    get<TResponse extends ApiResponseBody = ApiResponseBody>(
-        url: string,
-        options: ApiOptions = {},
-    ) {
-        return apiClientInternal<TResponse>(url, {
+    get<TData = unknown>(url: string, options: ApiOptions = {}) {
+        return apiClientInternal<TData>(url, {
             method: "GET",
             ...options,
         });
     },
 
-    post<TResponse extends ApiResponseBody = ApiResponseBody, TBody = unknown>(
+    post<TData = unknown, TBody = unknown>(
         url: string,
         data?: TBody | FormData,
         options: ApiOptions = {},
     ) {
-        const isFormData = data instanceof FormData;
-
-        return apiClientInternal<TResponse>(url, {
-            method: "POST",
-            headers: isFormData
-                ? options.headers
-                : {
-                      "Content-Type": "application/json",
-                      ...options.headers,
-                  },
-            body:
-                data == null
-                    ? undefined
-                    : isFormData
-                      ? data
-                      : JSON.stringify(data),
-            ...options,
-        });
+        return apiClientInternal<TData>(
+            url,
+            buildBodyOptions("POST", data, options),
+        );
     },
 
-    put<TResponse extends ApiResponseBody = ApiResponseBody, TBody = unknown>(
+    put<TData = unknown, TBody = unknown>(
         url: string,
         data?: TBody | FormData,
         options: ApiOptions = {},
     ) {
-        const isFormData = data instanceof FormData;
-
-        return apiClientInternal<TResponse>(url, {
-            method: "PUT",
-            headers: isFormData
-                ? options.headers
-                : {
-                      "Content-Type": "application/json",
-                      ...options.headers,
-                  },
-            body:
-                data == null
-                    ? undefined
-                    : isFormData
-                      ? data
-                      : JSON.stringify(data),
-            ...options,
-        });
+        return apiClientInternal<TData>(
+            url,
+            buildBodyOptions("PUT", data, options),
+        );
     },
 
-    patch<TResponse extends ApiResponseBody = ApiResponseBody, TBody = unknown>(
+    patch<TData = unknown, TBody = unknown>(
         url: string,
         data?: TBody,
         options: ApiOptions = {},
     ) {
-        return apiClientInternal<TResponse>(url, {
-            method: "PATCH",
-            headers: {
-                "Content-Type": "application/json",
-                ...options.headers,
-            },
-            body: data == null ? undefined : JSON.stringify(data),
-            ...options,
-        });
+        return apiClientInternal<TData>(
+            url,
+            buildBodyOptions("PATCH", data, options),
+        );
     },
 
-    delete<TResponse extends ApiResponseBody = ApiResponseBody>(
-        url: string,
-        options: ApiOptions = {},
-    ) {
-        return apiClientInternal<TResponse>(url, {
+    delete<TData = unknown>(url: string, options: ApiOptions = {}) {
+        return apiClientInternal<TData>(url, {
             method: "DELETE",
             ...options,
         });

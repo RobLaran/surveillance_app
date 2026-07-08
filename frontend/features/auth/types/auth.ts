@@ -22,11 +22,9 @@ export interface CurrentUser {
     avatar: string | null;
     avatar_url?: string | null;
     created_at: string;
-    login_log: {
-        ip_address: string;
-        user_agent: string;
-        created_at: string;
-    } | null;
+    ip_address: string;
+    user_agent: string;
+    last_login: string;
 }
 
 export type SignUpForm = {

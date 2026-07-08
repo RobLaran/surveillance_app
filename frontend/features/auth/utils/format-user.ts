@@ -14,9 +14,9 @@ export function formatUser(data: CurrentUser): User {
         phone: data.phone_number,
         location: data.location,
         avatarUrl: data?.avatar_url ?? "",
-        ipAddress: data.login_log?.ip_address ?? "",
-        userAgent: data.login_log?.user_agent ?? "",
+        ipAddress: data.ip_address ?? "",
+        userAgent: data.user_agent ?? "",
         joinDate: formatAccountCreatedSince(data.created_at),
-        lastLogin: formatLastLogin(data.login_log?.created_at),
+        lastLogin: formatLastLogin(data.last_login),
     };
 }

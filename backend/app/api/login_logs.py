@@ -21,7 +21,11 @@ def get_login_logs():
 def me_login_logs():
     user_id = get_jwt_identity()
     result = get_user_login_logs(user_id=user_id)
-    return jsonify(result), 201
+    return jsonify({
+        "success": True,
+        "message": "Login logs fetched successfully",
+        "data" : result
+    }), 201
 
 # =========================
 # USER LOGIN LOGS

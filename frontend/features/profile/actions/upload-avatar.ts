@@ -1,17 +1,10 @@
-import { changePasswordRequest } from "@/features/profile/services/profile-service";
+import { uploadAvatar } from "@/features/profile/services/profile-service";
 import { ApiError } from "@/lib/api-client";
 import { ActionResult } from "@/types/action-result";
 
-type ChangePasswordValues = {
-    current_password: string;
-    new_password: string;
-};
-
-export async function changePasswordAction(
-    values: ChangePasswordValues,
-): Promise<ActionResult> {
+export async function uploadAvatarAction(file: File): Promise<ActionResult> {
     try {
-        const message = await changePasswordRequest(values);
+        const message = await uploadAvatar(file);
 
         return {
             success: true,

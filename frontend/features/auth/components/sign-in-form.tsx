@@ -44,6 +44,14 @@ export function SignInForm() {
         const result = await signInAction(values);
 
         if (!result.success) {
+            if (result.errors) {
+                Object.values(result.errors)
+                    .reverse()
+                    .forEach((error) => toast.error(String(error)));
+
+                return;
+            }
+
             toast.error(result.message || "Something went wrong");
             return;
         }

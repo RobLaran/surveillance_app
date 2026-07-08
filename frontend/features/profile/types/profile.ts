@@ -1,4 +1,4 @@
-type Profile = {
+export type Profile = {
     id: string;
     name: string;
     email: string;
@@ -8,11 +8,12 @@ type Profile = {
     lastLogin: string | null;
     avatar: string | null;
     ipAddress: string;
+    userAgent: string;
 };
 
-type EditedProfile = Profile;
+export type EditedProfile = Profile;
 
-type LoginLog = {
+export type LoginLog = {
     login_log_id: string;
     created_at: string;
     ip_address: string;
@@ -20,4 +21,10 @@ type LoginLog = {
     status: string;
 };
 
-
+export interface UpdateCurrentUserValues {
+    firstName: string;
+    lastName: string;
+    email: string;
+    password: string;
+    confirmPassword: string;
+}

@@ -5,6 +5,7 @@ from flask_jwt_extended import (
     jwt_required,
 )
 from app.services.user_service import get_user_by_id, update_user_avatar
+from app.core.exceptions import NotFoundError, ValidationError
 
 storage = Blueprint('storage', __name__)
 
@@ -17,10 +18,7 @@ def upload_avatar():
     file = request.files.get("avatar")
 
     if not file:
-        return jsonify({
-            "success": False,
-            "message": "No file uploaded"
-        }), 400
+        raise ValidationError("No file uploaded")
 
     user_id = get_jwt_identity()
 
@@ -34,9 +32,7 @@ def upload_avatar():
 
     update_user_avatar(user_id, avatar_path)
 
-    return jsonify(result), (
-        201 if result["success"] else 500
-    )
+    return jsonify(result), 201
 
 # =========================
 # REMOVE AVATAR IMAGE
@@ -49,27 +45,18 @@ def remove_avatar():
     user = get_user_by_id(str(user_id))
 
     if not user:
-        return jsonify({
-            "success": False,
-            "message": "User not found"
-        }), 404
+        raise NotFoundError("User not found")
 
     avatar_path = user.get("avatar_path")
 
     if not avatar_path:
-        return jsonify({
-            "success": False,
-            "message": "No avatar uploaded"
-        }), 404
+        raise ValidationError("No avatar uploaded")
 
     result = remove_image([avatar_path])
 
     update_user_avatar(user_id, None)
 
-    return (
-        jsonify(result),
-        200 if result["success"] else 500
-    )
+    return jsonify(result), 200
 
 # =========================
 # GET AVATAR IMAGE
