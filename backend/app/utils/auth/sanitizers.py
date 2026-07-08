@@ -1,11 +1,11 @@
 def sanitize_sign_up_fields(data: dict) -> dict:
     """"Clean data inputs"""
     return {
-        "first_name": clean_str(data.get('first_name')),
-        "last_name": clean_str(data.get('last_name')),
+        "first_name": clean_str(data.get('firstName')),
+        "last_name": clean_str(data.get('lastName')),
         "email": clean_str(data.get('email')).lower(),
         "password": data.get('password') or "",
-        "confirm_password": data.get('confirm_password') or ""
+        "confirm_password": data.get('confirmPassword') or ""
     }
 
 def sanitize_sign_in_fields(data: dict) -> dict:

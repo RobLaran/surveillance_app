@@ -43,14 +43,26 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/features/auth/contexts/auth-context";
-import { formatDate } from "@/utils/format-date";
 import { uploadAvatarAction } from "@/features/profile/actions/upload-avatar";
 import { removeAvatarAction } from "@/features/profile/actions/remove-avatar";
 import { updateCurrentUserAction } from "@/features/profile/actions/update-current-user";
 import { ChangePasswordDialog } from "@/features/profile/components/change-password-dialog";
 import { LoginHistoryDialog } from "@/features/profile/components/login-history-dialog";
+import { getUserLoginLogs } from "@/features/profile/services/profile-service";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+
+const EMPTY_PROFILE: Profile = {
+    id: "",
+    name: "",
+    email: "",
+    phone: "",
+    location: "",
+    joinDate: "",
+    lastLogin: null,
+    avatar: null,
+    ipAddress: "",
+};
 
 export default function ProfilePage() {
     const router = useRouter();
@@ -58,47 +70,58 @@ export default function ProfilePage() {
     const [isEditing, isSetEditing] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [copied, setCopied] = useState(false);
-    const [profile, setProfile] = useState(null);
-    const [editedProfile, setEditedProfile] = useState(profile);
-    const fileInputRef = useRef(null);
-    const [selectedFile, setSelectedFile] = useState(null);
+    const [profile, setProfile] = useState<Profile | null>(null);
+    const [editedProfile, setEditedProfile] = useState<Profile | null>(
+        EMPTY_PROFILE,
+    );
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
     const [isRemoveDialogOpen, setIsRemoveDialogOpen] = useState(false);
     const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
     const [isLoginHistoryOpen, setIsLoginHistoryOpen] = useState(false);
     const [isLoggingOut, setIsLoggingOut] = useState(false);
-    const loginHistory = [];
+    const [loginLogs, setLoginLogs] = useState<LoginLog[]>([]);
+
     useEffect(() => {
         if (!user) return;
 
-        setProfile({
-            id: user?.id,
-            name: user ? `${user?.firstName} ${user?.lastName}` : "",
-            email: user?.email,
-            phone: user?.phone,
-            location: user?.location,
-            joinDate: user?.joinDate,
-            lastLogin: user?.lastLogin,
-            avatar: user?.avatarUrl,
-            ipAddress: user?.ipAddress,
-        });
+        const profileData: Profile = {
+            id: user.id,
+            name: `${user.firstName} ${user.lastName}`,
+            email: user.email,
+            phone: user.phone,
+            location: user.location,
+            joinDate: user.joinDate,
+            lastLogin: user.lastLogin,
+            avatar: user.avatarUrl,
+            ipAddress: user.ipAddress,
+        };
+
+        setProfile(profileData);
+        setEditedProfile(profileData);
     }, [user]);
 
-    const handleEdit = () => {
+    const handleEdit = (): void => {
+        if (!profile) return;
+
         isSetEditing(true);
         setEditedProfile(profile);
     };
 
-    const handleCancel = () => {
+    const handleCancel = (): void => {
         isSetEditing(false);
         setEditedProfile(profile);
     };
 
-    const handleSave = async () => {
+    const handleSave = async (): Promise<void> => {
+        if (!editedProfile) return;
+
         setIsSaving(true);
 
         try {
             const formData = new FormData();
+
             const [firstName, ...rest] = editedProfile.name.trim().split(" ");
             const lastName = rest.join(" ");
 
@@ -110,21 +133,20 @@ export default function ProfilePage() {
 
             const result = await updateCurrentUserAction(formData);
 
-            console.log(result);
-
             if (!result.success) {
-                if (result.errors.length > 0) {
+                if (result.errors) {
                     Object.values(result.errors)
                         .reverse()
-                        .forEach((err) => toast.error(err));
+                        .forEach((error) => toast.error(String(error)));
+
                     return;
                 }
 
-                toast.error(result.message || result?.message);
+                toast.error(result.message);
                 return;
             }
 
-            toast.success(result?.message || "Profile updated successfully");
+            toast.success(result.message ?? "Profile updated successfully");
 
             await loadUser();
 
@@ -134,26 +156,41 @@ export default function ProfilePage() {
         }
     };
 
-    const handleInputChange = (field, value) => {
-        setEditedProfile({ ...editedProfile, [field]: value });
+    const handleInputChange = (
+        field: keyof EditedProfile,
+        value: string,
+    ): void => {
+        if (!editedProfile) return;
+
+        setEditedProfile({
+            ...editedProfile,
+            [field]: value,
+        });
     };
 
-    const handleCopyId = () => {
+    const handleCopyId = (): void => {
+        if (!profile) return;
+
         navigator.clipboard.writeText(profile.id);
+
         setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
+
+        setTimeout(() => {
+            setCopied(false);
+        }, 2000);
     };
 
-    if (!profile) {
-        return <div>Loading...</div>;
-    }
-
-    async function handleAvatarUpload(event) {
+    async function handleAvatarUpload(
+        event: React.ChangeEvent<HTMLInputElement>,
+    ): Promise<void> {
         const file = event.target.files?.[0];
+
         if (!file) return;
 
         setSelectedFile(file);
+
         event.target.value = "";
+
         setIsUploadDialogOpen(true);
     }
 
@@ -170,7 +207,7 @@ export default function ProfilePage() {
         setIsRemoveDialogOpen(false);
     }
 
-    async function confirmUpload() {
+    async function confirmUpload(): Promise<void> {
         if (!selectedFile) return;
 
         const result = await uploadAvatarAction(selectedFile);
@@ -186,7 +223,7 @@ export default function ProfilePage() {
         setIsUploadDialogOpen(false);
     }
 
-    async function handleLogout() {
+    async function handleLogout(): Promise<void> {
         if (isLoggingOut) return;
 
         setIsLoggingOut(true);
@@ -197,6 +234,10 @@ export default function ProfilePage() {
             router.replace("/sign-in");
             setIsLoggingOut(false);
         }
+    }
+
+    if (!profile) {
+        return <div>Loading...</div>;
     }
 
     return (
@@ -254,7 +295,7 @@ export default function ProfilePage() {
                             <div className="flex flex-col items-center gap-4">
                                 <Avatar className="h-24 w-24 border-2 border-primary">
                                     <AvatarImage
-                                        src={profile?.avatar}
+                                        src={profile?.avatar ?? undefined}
                                         alt={profile?.name}
                                     />
                                     <AvatarFallback>
@@ -316,7 +357,7 @@ export default function ProfilePage() {
                                     </Label>
                                     {isEditing ? (
                                         <Input
-                                            value={editedProfile.name}
+                                            value={editedProfile?.name}
                                             onChange={(e) =>
                                                 handleInputChange(
                                                     "name",
@@ -341,7 +382,7 @@ export default function ProfilePage() {
                                     {isEditing ? (
                                         <Input
                                             type="email"
-                                            value={editedProfile.email}
+                                            value={editedProfile?.email}
                                             onChange={(e) =>
                                                 handleInputChange(
                                                     "email",
@@ -366,7 +407,7 @@ export default function ProfilePage() {
                                     {isEditing ? (
                                         <Input
                                             type="tel"
-                                            value={editedProfile.phone}
+                                            value={editedProfile?.phone}
                                             onChange={(e) =>
                                                 handleInputChange(
                                                     "phone",
@@ -390,7 +431,7 @@ export default function ProfilePage() {
                                     </Label>
                                     {isEditing ? (
                                         <Input
-                                            value={editedProfile.location}
+                                            value={editedProfile?.location}
                                             onChange={(e) =>
                                                 handleInputChange(
                                                     "location",
@@ -595,7 +636,7 @@ export default function ProfilePage() {
             <LoginHistoryDialog
                 open={isLoginHistoryOpen}
                 onOpenChange={setIsLoginHistoryOpen}
-                loginHistory={loginHistory}
+                loginHistory={loginLogs}
             />
 
             {/* Change Password Dialog */}

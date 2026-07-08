@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -23,9 +22,14 @@ import {
     FormMessage,
 } from "@/components/ui/form";
 
-export function SignInForm({ status }) {
+type SignInFormValues = {
+    email: string;
+    password: string;
+};
+
+export function SignInForm() {
     const router = useRouter();
-    const form = useForm({
+    const form = useForm<SignInFormValues>({
         defaultValues: {
             email: "",
             password: "",
@@ -36,14 +40,14 @@ export function SignInForm({ status }) {
         formState: { isSubmitting },
     } = form;
 
-    async function onSubmit(values) {
+    async function onSubmit(values: SignInFormValues) {
         const result = await signInAction(values);
 
         if (!result.success) {
-            toast.error(result.error.message || "Something went wrong");
+            toast.error(result.message || "Something went wrong");
             return;
         }
-        toast.success(result.data.message || "Sign in successful 🎉");
+        toast.success(result.message || "Sign in successful 🎉");
 
         router.replace("/");
         router.refresh();

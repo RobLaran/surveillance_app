@@ -8,27 +8,43 @@ import {
     useMemo,
     useRef,
     useState,
+    ReactNode,
 } from "react";
 import { usePathname } from "next/navigation";
+
 import {
     fetchCurrentUser,
     logoutRequest,
 } from "@/features/auth/services/auth-service";
 import { AUTH_STATUS } from "@/features/auth/constants/auth-status";
 import { formatUser } from "@/features/auth/utils/format-user";
+import { User } from "@/features/auth/types/auth";
 
-const AuthContext = createContext(null);
+type AuthContextType = {
+    user: User | null;
+    loadUser: () => Promise<User | null>;
+    logout: () => Promise<void>;
+    isLoading: boolean;
+    isAuthenticated: boolean;
+    isUnauthenticated: boolean;
+};
 
-const PUBLIC_ROUTES = new Set(["/sign-in", "/sign-up"]);
+type AuthProviderProps = {
+    children: ReactNode;
+};
 
-export function AuthProvider({ children }) {
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+const PUBLIC_ROUTES = new Set<string>(["/sign-in", "/sign-up"]);
+
+export function AuthProvider({ children }: AuthProviderProps) {
     const pathname = usePathname();
 
-    const [user, setUser] = useState(null);
-    const [status, setStatus] = useState(AUTH_STATUS.LOADING);
+    const [user, setUser] = useState<User | null>(null);
+    const [status, setStatus] = useState<string>(AUTH_STATUS.LOADING);
 
-    const requestRef = useRef(null);
-    const mountedRef = useRef(false);
+    const requestRef = useRef<Promise<User | null> | null>(null);
+    const mountedRef = useRef<boolean>(false);
 
     useEffect(() => {
         mountedRef.current = true;
@@ -38,12 +54,13 @@ export function AuthProvider({ children }) {
         };
     }, []);
 
-    const loadUser = useCallback(async () => {
+    const loadUser = useCallback(async (): Promise<User | null> => {
         if (PUBLIC_ROUTES.has(pathname)) {
             if (mountedRef.current) {
                 setUser(null);
                 setStatus(AUTH_STATUS.UNAUTHENTICATED);
             }
+
             return null;
         }
 
@@ -56,14 +73,17 @@ export function AuthProvider({ children }) {
         requestRef.current = (async () => {
             try {
                 const currentUser = await fetchCurrentUser();
+                const formattedUser = formatUser(currentUser) as User;
 
                 if (!mountedRef.current) {
                     return null;
                 }
-                setUser(formatUser(currentUser));
+
+                setUser(formattedUser);
                 setStatus(AUTH_STATUS.AUTHENTICATED);
-                return currentUser;
-            } catch (error) {
+
+                return formattedUser;
+            } catch {
                 if (!mountedRef.current) {
                     return null;
                 }
@@ -80,7 +100,7 @@ export function AuthProvider({ children }) {
         return requestRef.current;
     }, [pathname]);
 
-    const logout = useCallback(async () => {
+    const logout = useCallback(async (): Promise<void> => {
         try {
             await logoutRequest();
         } finally {
@@ -92,15 +112,14 @@ export function AuthProvider({ children }) {
     }, []);
 
     useEffect(() => {
-        loadUser();
+        void loadUser();
     }, [loadUser]);
 
-    const value = useMemo(
+    const value = useMemo<AuthContextType>(
         () => ({
             user,
             loadUser,
             logout,
-
             isLoading: status === AUTH_STATUS.LOADING,
             isAuthenticated: status === AUTH_STATUS.AUTHENTICATED,
             isUnauthenticated: status === AUTH_STATUS.UNAUTHENTICATED,
@@ -113,7 +132,7 @@ export function AuthProvider({ children }) {
     );
 }
 
-export function useAuth() {
+export function useAuth(): AuthContextType {
     const context = useContext(AuthContext);
 
     if (!context) {

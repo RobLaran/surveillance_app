@@ -19,6 +19,10 @@ export async function updateCurrentUser(data) {
     return request.put("/api/users/me/update", data);
 }
 
+export async function getUserLoginLogs() {
+    return request.get("/api/login-logs/me");
+}
+
 export async function changePasswordRequest(data) {
-    return request.put("api/users/me/change-password", data);
+    return request.put("/api/users/me/change-password", data);
 }

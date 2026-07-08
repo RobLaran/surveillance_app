@@ -31,10 +31,10 @@
         "**/*.mts",
         "app/management/page.tsx",
         "components/ui/auth-card.tsx",
-        "features/auth/components/auth-layout.jsx",
+        "features/auth/components/auth-layout.tsx",
         "app/(auth)/sign-up/page.jsx",
-        "features/auth/actions/sign-in.js",
-        "features/auth/components/auth-guard.jsx"
-    ],
+        "features/auth/actions/sign-in.ts",
+        "features/auth/components/auth-guard.tsx"
+, "features/auth/validators/sign-up.js"    ],
     "exclude": ["node_modules"]
 }

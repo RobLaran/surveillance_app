@@ -5,7 +5,7 @@ NAME_PATTERN = r"^[A-Za-z\s'-]+$"
 EMAIL_PATTERN = r"^[^\s@]+@[^\s@]+\.[^\s@]{2,}$"
 
 NAME_MIN, NAME_MAX = 2, 50
-PASSWORD_MIN, PASSWORD_MAX = 8, 128
+PASSWORD_MIN, PASSWORD_MAX = 4, 128
 
 PHONE_PATTERN = r"^[0-9+\-\s()]{7,20}$"
 LOCATION_MIN = 2

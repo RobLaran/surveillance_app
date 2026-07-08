@@ -23,10 +23,18 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 
+type SignUpFormValues = {
+    firstName: string;
+    lastName: string;
+    email: string;
+    password: string;
+    confirmPassword: string;
+};
+
 export function SignUpForm() {
     const router = useRouter();
 
-    const form = useForm({
+    const form = useForm<SignUpFormValues>({
         mode: "onChange",
         defaultValues: {
             firstName: "",
@@ -46,22 +54,22 @@ export function SignUpForm() {
         formState: { isSubmitting },
     } = form;
 
-    async function onSubmit(values) {
+    async function onSubmit(values: SignUpFormValues) {
         const result = await signUpAction(values);
 
         if (!result.success) {
-            if (result.data.errors) {
-                Object.values(result.data.errors)
+            if (result.errors) {
+                Object.values(result.errors)
                     .reverse()
-                    .forEach((err) => toast.error(err));
+                    .forEach((err) => toast.error(err as string));
                 return;
             }
 
-            toast.error(result.data.message);
+            toast.error(result.message);
             return;
         }
 
-        toast.success(result.data.message || "Account created successfully 🎉");
+        toast.success(result.message || "Account created successfully 🎉");
 
         form.reset();
         router.push("/sign-in");

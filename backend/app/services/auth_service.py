@@ -41,8 +41,10 @@ def register_user(data: dict):
 
     return {
         "success": True,
-        "user_id": user.get("user_id"),
         "message": "Account created successfully",
+        "data": {
+            "user_id": user.get("user_id")
+        },
     }
 
 
@@ -81,8 +83,9 @@ def login_user(data: dict):
     return {
         "success": True,
         "message": "Signed in successfully",
-        "user_id": user_id,
-        "login_log": login_log
+        "data": {
+            "login_log": login_log
+        }
     }
 
 

@@ -9,6 +9,7 @@ from flask_jwt_extended import (
     set_access_cookies,
     set_refresh_cookies,
     unset_jwt_cookies,
+    verify_jwt_in_request,
 )
 from app.services.auth_service import login_user, register_user
 from app.services.user_service import get_user_by_id
@@ -33,14 +34,20 @@ def sign_up():
 # =========================
 @auth.route("/api/auth/sign-in", methods=["POST"])
 def sign_in():
+    verify_jwt_in_request(optional=True)
+    if get_jwt_identity():
+        return jsonify({
+            "success": True, 
+            "message": "Already signed in"
+        }), 200
+
     result = login_user(request.get_json())
-    user_id = result["user_id"]
+    data = result["data"]
+    login_log = data.get("login_log")
+    user_id = login_log.get("user_id")
     access_token = create_access_token(identity=user_id)
     refresh_token = create_refresh_token(identity=user_id)
-    response = jsonify({
-        "success": True, 
-        "message": result["message"]
-    })
+    response = jsonify(result)
 
     set_access_cookies(response, access_token)
     set_refresh_cookies(response, refresh_token)
