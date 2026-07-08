@@ -39,6 +39,7 @@ import {
     Copy,
     Check,
     Shield,
+    History,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/features/auth/contexts/auth-context";
@@ -47,6 +48,7 @@ import { uploadAvatarAction } from "@/features/profile/actions/upload-avatar";
 import { removeAvatarAction } from "@/features/profile/actions/remove-avatar";
 import { updateCurrentUserAction } from "@/features/profile/actions/update-current-user";
 import { ChangePasswordDialog } from "@/features/profile/components/change-password-dialog";
+import { LoginHistoryDialog } from "@/features/profile/components/login-history-dialog";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
@@ -65,7 +67,7 @@ export default function ProfilePage() {
     const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
     const [isLoginHistoryOpen, setIsLoginHistoryOpen] = useState(false);
     const [isLoggingOut, setIsLoggingOut] = useState(false);
-
+    const loginHistory = [];
     useEffect(() => {
         if (!user) return;
 
@@ -447,6 +449,17 @@ export default function ProfilePage() {
                                 <div className="flex items-center justify-between p-3 rounded-lg bg-secondary/20">
                                     <div className="space-y-1">
                                         <p className="text-xs text-muted-foreground">
+                                            IP Address
+                                        </p>
+                                        <p className="text-sm text-foreground flex items-center gap-1">
+                                            {profile?.ipAddress}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center justify-between p-3 rounded-lg bg-secondary/20">
+                                    <div className="space-y-1">
+                                        <p className="text-xs text-muted-foreground">
                                             Account Created
                                         </p>
                                         <p className="text-sm text-foreground flex items-center gap-1">
@@ -465,18 +478,16 @@ export default function ProfilePage() {
                                         </p>
                                     </div>
                                 </div>
-
-                                <div className="flex items-center justify-between p-3 rounded-lg bg-secondary/20">
-                                    <div className="space-y-1">
-                                        <p className="text-xs text-muted-foreground">
-                                            IP Address
-                                        </p>
-                                        <p className="text-sm text-foreground flex items-center gap-1">
-                                            {profile?.ipAddress}
-                                        </p>
-                                    </div>
-                                </div>
                             </div>
+
+                            <Button
+                                variant="outline"
+                                className="w-full justify-start gap-2"
+                                onClick={() => setIsLoginHistoryOpen(true)}
+                            >
+                                <Shield className="h-4 w-4" />
+                                View Login History
+                            </Button>
                         </CardContent>
                     </Card>
 
@@ -485,11 +496,11 @@ export default function ProfilePage() {
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2 text-lg">
                                 <Lock className="h-5 w-5 text-primary" />
-                                Security
+                                Password Settings
                             </CardTitle>
 
                             <CardDescription>
-                                Manage your account security settings.
+                                Manage your account password.
                             </CardDescription>
                         </CardHeader>
 
@@ -501,15 +512,6 @@ export default function ProfilePage() {
                             >
                                 <Lock className="h-4 w-4" />
                                 Change Password
-                            </Button>
-
-                            <Button
-                                variant="outline"
-                                className="w-full justify-start gap-2"
-                                onClick={() => setIsLoginHistoryOpen(true)}
-                            >
-                                <Shield className="h-4 w-4" />
-                                View Login History
                             </Button>
 
                             <Separator />
@@ -588,6 +590,13 @@ export default function ProfilePage() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+
+            {/* Login History Dialog */}
+            <LoginHistoryDialog
+                open={isLoginHistoryOpen}
+                onOpenChange={setIsLoginHistoryOpen}
+                loginHistory={loginHistory}
+            />
 
             {/* Change Password Dialog */}
             <ChangePasswordDialog
