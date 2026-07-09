@@ -2,6 +2,8 @@ from flask import Blueprint, jsonify, request
 from app.services.user_service import get_all_users, update_user, change_user_password
 from flask_jwt_extended import get_jwt_identity, jwt_required
 
+from app.utils.responses import success_response
+
 users = Blueprint('users', __name__)
 
 # =========================
@@ -11,7 +13,10 @@ users = Blueprint('users', __name__)
 def list_users():
     """Returns all users from the database."""
     users = get_all_users()
-    return jsonify(users), 200
+    return success_response(
+        message="Fetched all users successfully",
+        data=users
+    )
 
 # =========================
 # UPDATE USER

@@ -54,9 +54,10 @@ def get_user_login_logs(user_id: str) -> list:
     return response.data or []
 
 # =========================
-# GET LATEST LOGIN LOG OF ONE USER
+# GET LAST LOGIN OF ONE USER
 # =========================
-def get_latest_login_log(user_id: str) -> dict | None:
+def get_last_login(user_id: str) -> dict | None:
+    """"Fetches user last login"""
     response = (
         supabase.table("login_logs")
         .select("*")

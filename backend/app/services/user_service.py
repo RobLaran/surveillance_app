@@ -8,33 +8,46 @@ from app.utils.auth.validators import validate_user_update_fields
 from app.utils.auth.sanitizers import sanitize_user_update_fields
 from app.utils.auth.password import verify_password, hash_password
 
-def get_all_users():
+from app.types.user_types import CreateUserData, User
+
+def get_all_users() -> list[User]:
     """Fetch all users from the database."""
-    response = supabase.table("users").select("*").execute()
+    response = (
+        supabase
+        .table("users")
+        .select("*")
+        .execute()
+    )
+
     return response.data or []
+
    
-def get_user_by_id(user_id: str):
+def get_user_by_id(user_id: str) -> User | None:
     """"Fetches user info by id"""
-    if not user_id:
-        raise NotFoundError("No user id")
+    response = (
+        supabase
+        .table("users")
+        .select("*")
+        .eq("user_id", user_id)
+        .limit(1)
+        .execute()
+    )
 
-    response = supabase.table("users").select("*").eq("user_id", user_id).limit(1).execute()
-    if response.data:
-        return response.data[0]
+    return response.data[0] if response.data else None
 
-    return None
 
-def get_user_by_email(email: str):
+def get_user_by_email(email: str) -> User | None:
     """"Fetches user info by email"""
-    if not email:
-        raise ValidationError(errors=["Email required"])
+    response = (
+        supabase
+        .table("users")
+        .select("*")
+        .eq("email", email)
+        .limit(1)
+        .execute()
+    )
 
-    response = supabase.table("users").select("*").eq("email", email).limit(1).execute()
-
-    if response.data and len(response.data) > 0:
-        return response.data[0]
-
-    return None
+    return response.data[0] if response.data else None
   
     
 def email_exists(email: str) -> bool:
@@ -50,17 +63,18 @@ def email_exists(email: str) -> bool:
     return len(result.data) > 0
    
 
-def create_user(data: dict):
+def create_user(payload: CreateUserData) -> User | None:
     """"Creates user/Insert user into database"""
     response = (supabase
         .table("users")
         .insert({
-            "first_name": data['first_name'],
-            "last_name": data['last_name'],
-            "email": data['email'],
-            "password_hash": data['password_hash'],
+            "first_name": payload['first_name'],
+            "last_name": payload['last_name'],
+            "email": payload['email'],
+            "password_hash": payload['password_hash'],
         })
-        .execute())
+        .execute()
+    )
     
     return response.data[0] if response.data else None
 

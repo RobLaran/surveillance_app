@@ -32,35 +32,15 @@ def remove_image(paths: list):
     }
    
     
-def get_image(path):
-    try:
+def get_image(path) -> str:
         bucket = supabase.storage.from_("avatars")
-
         result = bucket.create_signed_url(
             path,
             60 * 60  # 1 hour
         )
 
-        if hasattr(result, "error") and result.error:
-            return {
-                "success": False,
-                "message": str(result.error)
-            }
-
-        return {
-            "success": True,
-            "message": "Image received",
-            "data": {
-                "path": path,
-                "url": result["signedURL"]
-            }
-        }
-
-    except Exception as e:
-        return {
-            "success": False,
-            "message": str(e)
-        }
+        image_url = str(result["signedURL"])
+        return image_url
 
 def is_image_exists(path):
     try:
