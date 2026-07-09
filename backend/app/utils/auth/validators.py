@@ -66,6 +66,23 @@ def validate_sign_in_fields(data: dict):
 
     return (False, errors) if errors else (True, None)
 
+# =========================
+# CHANGE PASSWORD
+# =========================
+def validate_change_password_fields(data: dict):
+    errors = []
+
+    for result in [
+        validate_presence(data.get("current_password"), "Current password"),
+        validate_password(data.get("new_password"), "New Password"),
+        validate_confirm_password(data.get("new_password"), data.get("confirm_password")),
+    ]:
+        valid, error = result
+        if not valid:
+            errors.append(error)
+
+    return (False, errors) if errors else (True, None)
+
 
 # =========================
 # HELPERS
@@ -98,12 +115,12 @@ def validate_email(email: str):
     return True, None
 
 
-def validate_password(password: str):
+def validate_password(password: str, field_name: str = "Password"):
     if is_blank(password):
-        return False, "Password is required"
+        return False, f"{field_name} is required"
 
     if not has_valid_length(password, PASSWORD_MIN, PASSWORD_MAX):
-        return False, f"Password must be between {PASSWORD_MIN} and {PASSWORD_MAX} characters"
+        return False, f"{field_name} must be between {PASSWORD_MIN} and {PASSWORD_MAX} characters"
 
     return True, None
 
