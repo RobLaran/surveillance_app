@@ -53,19 +53,6 @@ def get_user_by_email(email: str) -> User | None:
     return response.data[0] if response.data else None
   
     
-def email_exists(email: str) -> bool:
-    """"Checks db if email already used"""
-    result = (
-        supabase.table("users")
-        .select("user_id")
-        .eq("email", email)
-        .limit(1)
-        .execute()
-    )
-
-    return len(result.data) > 0
-   
-
 # =========================
 # BUILD CURRENT USER
 # =========================

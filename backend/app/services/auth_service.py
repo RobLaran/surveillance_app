@@ -3,17 +3,16 @@ import logging
 from flask import Response
 from flask_jwt_extended import create_access_token, create_refresh_token, set_access_cookies, set_refresh_cookies
 
-from .user_service import get_user_by_email, create_user, get_user_by_id
-from .login_log_service import create_login_log, get_last_login
+from .user_service import get_user_by_email, create_user
+from .login_log_service import create_login_log
 
 from app.utils.auth.password import verify_password, hash_password
 from app.utils.auth.validators import validate_sign_up_fields, validate_sign_in_fields
 from app.utils.auth.sanitizers import sanitize_sign_up_fields, sanitize_sign_in_fields
 from app.utils.request import get_client_ip, get_user_agent
-from app.services.storage_service import get_image
-from app.core.exceptions import NotFoundError, ValidationError, ConflictError, UnauthorizedError
-from app.serializers.user_serializer import serialize_current_user, serialize_public_user
-from app.types.user_types import CreateUserData, CurrentUser, LoginUserData, PublicUser, User
+from app.core.exceptions import ValidationError, ConflictError, UnauthorizedError
+from app.serializers.user_serializer import serialize_public_user
+from app.types.user_types import CreateUserData, LoginUserData, PublicUser, User
 
 logger = logging.getLogger(__name__)
 
