@@ -91,7 +91,7 @@ def get_avatar():
     )
 
 # =========================
-# UPLOAD AVATAR IMAGE
+# DELETE THIS ROUTE(UNUSED)
 # =========================
 @storage.route("/api/avatars/exists/<string:path>", methods=["GET"])
 def is_exists(path):

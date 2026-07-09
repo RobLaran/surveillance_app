@@ -42,6 +42,7 @@ def get_image(path) -> str:
         image_url = str(result["signedURL"])
         return image_url
 
+# DELETE?
 def is_image_exists(path):
     try:
         response = supabase.storage.from_('avatars').exists(path)
