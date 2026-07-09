@@ -10,6 +10,7 @@ users = Blueprint('users', __name__)
 # USER LIST
 # =========================
 @users.route('/api/users', methods=['GET'])
+@jwt_required()
 def list_users():
     """Returns all users from the database."""
     users = get_all_users()

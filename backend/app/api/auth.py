@@ -10,7 +10,8 @@ from flask_jwt_extended import (
     verify_jwt_in_request,
 )
 
-from app.services.auth_service import build_current_user, login_user, register_user, set_tokens
+from app.services.auth_service import login_user, register_user, set_tokens
+from app.services.user_service import build_current_user
 from app.utils.responses import success_response
 
 logger = logging.getLogger(__name__)
@@ -65,7 +66,7 @@ def me() -> Response:
     )
     
     return success_response(
-        message="Fetched user successfully",
+        message="Fetched current user successfully",
         data=current_user
     )
 

@@ -114,24 +114,3 @@ def set_tokens(identity: str, response: Response) -> Response:
     set_access_cookies(response, access_token)
     set_refresh_cookies(response, refresh_token)
     return response
-
-# =========================
-# BUILD CURRENT USER
-# =========================
-def build_current_user(user_id: str, exp: int) -> CurrentUser:
-    user = get_user_by_id(user_id=user_id)
-    
-    if not user:
-        raise NotFoundError("User not found")
-    
-    login_log = get_last_login(user_id=user_id)
-
-    avatar_path = user.get("avatar_path")
-    avatar_url = get_image(avatar_path) if avatar_path else None
-
-    return serialize_current_user(
-        user=user,
-        login_log=login_log,
-        avatar_url=avatar_url,
-        exp=exp
-    )

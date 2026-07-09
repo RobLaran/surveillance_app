@@ -1,14 +1,17 @@
+
+
 from .supabase_client import supabase
 
 from typing import Any
 
 from app.core.exceptions import ConflictError, NotFoundError, ValidationError
-
+from app.types.user_types import CreateUserData, CurrentUser, User
 from app.utils.auth.validators import validate_user_update_fields
 from app.utils.auth.sanitizers import sanitize_user_update_fields
 from app.utils.auth.password import verify_password, hash_password
-
-from app.types.user_types import CreateUserData, User
+from app.services.login_log_service import get_last_login
+from app.services.storage_service import get_image
+from app.serializers.user_serializer import serialize_current_user
 
 def get_all_users() -> list[User]:
     """Fetch all users from the database."""
@@ -62,6 +65,27 @@ def email_exists(email: str) -> bool:
 
     return len(result.data) > 0
    
+
+# =========================
+# BUILD CURRENT USER
+# =========================
+def build_current_user(user_id: str, exp: int) -> CurrentUser:
+    user = get_user_by_id(user_id=user_id)
+    
+    if not user:
+        raise NotFoundError("User not found")
+    
+    login_log = get_last_login(user_id=user_id)
+
+    avatar_path = user.get("avatar_path")
+    avatar_url = get_image(avatar_path) if avatar_path else None
+
+    return serialize_current_user(
+        user=user,
+        login_log=login_log,
+        avatar_url=avatar_url,
+        exp=exp
+    )
 
 def create_user(payload: CreateUserData) -> User | None:
     """"Creates user/Insert user into database"""
