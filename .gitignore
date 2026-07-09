@@ -1,13 +1,34 @@
+# .gitignore
+.gitignore
+
 # ==========================================
 # ROOT
 # ==========================================
 
 plan.txt
-.vscode
+.vscode/
+
+venv/
+.venv/
+env/
 
 # ==========================================
 # BACKEND (Flask)
 # ==========================================
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.pyre/
+.hypothesis/
+.tox/
+.nox/
 
 backend/venv/
 backend/.venv/
@@ -27,6 +48,8 @@ backend/.env.*
 frontend/AGENTS.md
 frontend/CLAUDE.md
 frontend/README.md
+
+frontend/.turbo/
 
 # Dependencies
 frontend/node_modules/
