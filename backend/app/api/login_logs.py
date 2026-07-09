@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from app.services.login_log_service import get_all_login_logs, get_user_login_logs, get_latest_login_log
+from app.services.login_log_service import get_all_login_logs, get_user_login_logs, get_last_login
 
 login_logs = Blueprint("login_logs", __name__)
 
@@ -34,6 +34,6 @@ def me_login_logs():
 @jwt_required()
 def me_latest_login_log():
     user_id = get_jwt_identity()
-    result = get_latest_login_log(user_id=user_id)
+    result = get_last_login(user_id=user_id)
     return jsonify(result), 201
 

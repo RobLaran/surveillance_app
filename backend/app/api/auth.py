@@ -2,23 +2,16 @@ import logging
 from flask import Blueprint, request, Response
 from flask_jwt_extended import (
     create_access_token,
-    create_refresh_token,
     get_jwt,
     get_jwt_identity,
     jwt_required,
     set_access_cookies,
-    set_refresh_cookies,
     unset_jwt_cookies,
     verify_jwt_in_request,
 )
 
-from app.core.exceptions import NotFoundError
-from app.services.auth_service import login_user, register_user, set_tokens
-from app.services.user_service import get_user_by_id
-from app.services.login_log_service import get_last_login
-from app.services.storage_service import get_image
+from app.services.auth_service import build_current_user, login_user, register_user, set_tokens
 from app.utils.responses import success_response
-from app.serializers.user_serializer import serialize_current_user
 
 logger = logging.getLogger(__name__)
 auth = Blueprint("auth", __name__)
@@ -66,29 +59,18 @@ def sign_in() -> Response:
 @auth.route("/api/auth/me", methods=["GET"])
 @jwt_required()
 def me() -> Response:
-    user_id = get_jwt_identity()
-    user = get_user_by_id(user_id=user_id)
-    
-    if not user:
-        raise NotFoundError("User not found")
-    
-    login_log = get_last_login(user_id=user_id)
-
-    avatar_path = user.get("avatar_path")
-    avatar_url = get_image(avatar_path) if avatar_path else None
+    current_user = build_current_user(
+        user_id=get_jwt_identity(),
+        exp=get_jwt()["exp"]
+    )
     
     return success_response(
         message="Fetched user successfully",
-        data=serialize_current_user(
-            user=user,
-            login_log=login_log,
-            avatar_url=avatar_url,
-            exp=get_jwt()["exp"]
-        )
+        data=current_user
     )
 
 # =========================
-# REFRESH
+# REFRESH TOKEN
 # =========================
 @auth.route("/api/auth/refresh", methods=["POST"])
 @jwt_required(refresh=True)
