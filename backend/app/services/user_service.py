@@ -6,14 +6,14 @@ from .supabase_client import supabase
 from typing import Any
 
 from app.core.exceptions import ConflictError, NotFoundError, ValidationError
-from app.types.user_types import CurrentUser, UpdateUserData, User
+from app.types.user_types import CurrentUser, PublicUser, UpdateUserData, User
 from app.types.auth_types import CreateUserData
 from app.utils.auth.validators import validate_user_update_fields
 from app.utils.auth.sanitizers import sanitize_user_update_fields
 from app.utils.auth.password import verify_password, hash_password
 from app.services.login_log_service import get_last_login
 from app.services.storage_service import get_image
-from app.serializers.user_serializer import serialize_current_user
+from app.serializers.user_serializer import serialize_current_user, serialize_public_user
 
 def get_all_users() -> list[User]:
     """Fetch all users from the database."""
@@ -91,7 +91,24 @@ def create_user(payload: CreateUserData) -> User | None:
     
     return response.data[0] if response.data else None
 
-def update_user(user_id: str, data: dict):
+def _get_existing_user(user_id: str) -> User:
+    user = get_user_by_id(user_id)
+
+    if not user:
+        raise NotFoundError("User not found")
+    
+    return user
+
+def _ensure_email_available(existing_email: str, new_email: str) -> None:
+    if existing_email == new_email:
+        return
+
+    user_with_email = get_user_by_email(new_email)
+
+    if user_with_email:
+        raise ConflictError("Email already in use")
+
+def update_user(user_id: str, data: dict) -> PublicUser:
     """"Updates user info"""
     if not user_id:
         raise NotFoundError("No user id")
@@ -104,41 +121,33 @@ def update_user(user_id: str, data: dict):
     if not is_valid:
         raise ValidationError(errors=errors)
     
-    user = get_user_by_id(user_id)
-    current_email = user.get("email")
-    new_email = data.get("email")
+    existing_user = _get_existing_user(user_id)
 
-    if current_email != new_email:
-        existing_user = get_user_by_email(new_email)
+    # Should separate for email if already use   
+    existing_email = existing_user["email"]
+    new_email = data["email"]
 
-        if existing_user:
-            raise ConflictError("Email already in use")
-    
-    (supabase
-        .table("users")
-        .update({
-            "first_name": data['first_name'],
-            "last_name": data['last_name'],
-            "email": data['email'],
-            "phone_number": data['phone_number'],
-            "location": data['location'],
-        })
-        .eq("user_id", user_id)
-        .execute()
+    _ensure_email_available(
+        existing_email=existing_email, 
+        new_email=new_email
     )
-    
-    return {
-        "success": True,
-        "message": "User updated successfully",
-        "data": {
-            "user_id": user_id
-        }
+        
+    payload: UpdateUserData = {
+        "first_name": data['first_name'],
+        "last_name": data['last_name'],
+        "email": data['email'],
+        "phone_number": data['phone_number'],
+        "location": data['location'],
     }
+    
+    updated_user = update_user_record(user_id=user_id, payload=payload)
+    
+    return serialize_public_user(updated_user)
 
 def update_user_record(
     user_id: str,
     payload: UpdateUserData,
-) -> User | None:
+) -> User:
 
     response = (
         supabase
@@ -148,8 +157,10 @@ def update_user_record(
         .execute()
     )
 
-    return response.data[0] if response.data else None
+    if not response.data:
+        raise RuntimeError("Failed to update user")
 
+    return response.data[0]
   
 def update_user_avatar(user_id, avatar_path):
     """"Updates user avatar"""
