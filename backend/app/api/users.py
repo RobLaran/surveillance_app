@@ -26,18 +26,12 @@ def list_users():
 @jwt_required()
 def update_current_user():
     user_id = get_jwt_identity()
+    updated_user = update_user(user_id, request.get_json())
 
-    payload = {
-        "first_name": request.form.get("first_name"),
-        "last_name": request.form.get("last_name"),
-        "email": request.form.get("email"),
-        "phone_number": request.form.get("phone_number"),
-        "location": request.form.get("location"),
-    }
-
-    result = update_user(user_id, payload)
-
-    return jsonify(result), 200
+    return success_response(
+        message="User updated successfully",
+        data=updated_user
+    )
 
 # =========================
 # CHANGE USER PASSWORD
