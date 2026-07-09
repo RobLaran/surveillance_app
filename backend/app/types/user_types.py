@@ -27,6 +27,13 @@ class CurrentUser(TypedDict):
     exp: int
     created_at: str
 
+class UpdateUserData(TypedDict):
+    first_name: str
+    last_name: str
+    email: str
+    phone_number: str | None
+    location: str | None
+
 class PublicUser(TypedDict):  
     user_id: str
     first_name: str
