@@ -1,11 +1,13 @@
 
 
+
 from .supabase_client import supabase
 
 from typing import Any
 
 from app.core.exceptions import ConflictError, NotFoundError, ValidationError
-from app.types.user_types import CreateUserData, CurrentUser, User
+from app.types.user_types import CurrentUser, UpdateUserData, User
+from app.types.auth_types import CreateUserData
 from app.utils.auth.validators import validate_user_update_fields
 from app.utils.auth.sanitizers import sanitize_user_update_fields
 from app.utils.auth.password import verify_password, hash_password
@@ -132,6 +134,21 @@ def update_user(user_id: str, data: dict):
             "user_id": user_id
         }
     }
+
+def update_user_record(
+    user_id: str,
+    payload: UpdateUserData,
+) -> User | None:
+
+    response = (
+        supabase
+        .table("users")
+        .update(payload)
+        .eq("user_id", user_id)
+        .execute()
+    )
+
+    return response.data[0] if response.data else None
 
   
 def update_user_avatar(user_id, avatar_path):
