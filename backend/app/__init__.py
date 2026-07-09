@@ -1,8 +1,7 @@
 import os 
 import logging
 
-from flask import Flask, jsonify
-from app.core.exceptions import AppError
+from flask import Flask
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from app.core.camera_monitor import start_monitor
