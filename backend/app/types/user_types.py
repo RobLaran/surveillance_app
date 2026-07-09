@@ -27,16 +27,6 @@ class CurrentUser(TypedDict):
     exp: int
     created_at: str
 
-class CreateUserData(TypedDict):
-    first_name: str
-    last_name: str
-    email: str
-    password_hash: str
-
-class LoginUserData(TypedDict):
-    email: str
-    password: str
-
 class PublicUser(TypedDict):  
     user_id: str
     first_name: str

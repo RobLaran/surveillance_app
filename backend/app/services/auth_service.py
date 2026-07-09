@@ -12,7 +12,8 @@ from app.utils.auth.sanitizers import sanitize_sign_up_fields, sanitize_sign_in_
 from app.utils.request import get_client_ip, get_user_agent
 from app.core.exceptions import ValidationError, ConflictError, UnauthorizedError
 from app.serializers.user_serializer import serialize_public_user
-from app.types.user_types import CreateUserData, LoginUserData, PublicUser, User
+from app.types.user_types import PublicUser, User
+from app.types.auth_types import CreateUserData, LoginUserData
 
 logger = logging.getLogger(__name__)
 
