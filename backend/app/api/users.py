@@ -41,9 +41,11 @@ def update_current_user():
 def change_password():
     user_id = get_jwt_identity()
 
-    result = change_user_password(
+    change_user_password(
         user_id=user_id,
         data=request.get_json()
     )
 
-    return jsonify(result), 200
+    return success_response(
+        message="Password updated successfully",
+    )

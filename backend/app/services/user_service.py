@@ -8,8 +8,8 @@ from typing import Any
 from app.core.exceptions import ConflictError, NotFoundError, ValidationError
 from app.types.user_types import CurrentUser, PublicUser, UpdateUserData, User
 from app.types.auth_types import CreateUserData
-from app.utils.auth.validators import validate_user_update_fields
-from app.utils.auth.sanitizers import sanitize_user_update_fields
+from app.utils.auth.validators import validate_change_password_fields, validate_user_update_fields
+from app.utils.auth.sanitizers import sanitize_change_password_fields, sanitize_user_update_fields
 from app.utils.auth.password import verify_password, hash_password
 from app.services.login_log_service import get_last_login
 from app.services.storage_service import get_image
@@ -173,39 +173,57 @@ def update_user_avatar(user_id, avatar_path):
 
     return response
 
+def _validate_new_password(
+    current_password: str,
+    new_password: str,
+    password_hash: str,
+) -> None:
+
+    if not verify_password(current_password, password_hash):
+        raise ValidationError(
+            errors={
+                "current_password":
+                "Current password is incorrect"
+            }
+        )
+
+    if verify_password(new_password, password_hash):
+        raise ValidationError(
+            errors={
+                "new_password":
+                "New password cannot be the same as the current password"
+            }
+        )
 
 def change_user_password(
     user_id: str,
     data: dict[str, str],
-) -> dict[str, Any]:
+) -> None:
     """Change the authenticated user's password."""
     if not user_id:
         raise NotFoundError("No user id")
     elif not data:
         raise ValidationError(errors={ "data": "Request body is required" })
     
-    # Fetch user
-    user = get_user_by_id(user_id=user_id)
+    data = sanitize_change_password_fields(data)
 
-    # Verify current password
-    if not verify_password(
-        data["current_password"],
-        user["password_hash"]
-    ):
-       raise ValidationError(errors={ "current_password": "Current password is incorrect" })
-
-    # Check new and old password
-    if verify_password(
-        data["new_password"],
-        user["password_hash"]
-    ):
-        raise ValidationError(errors={ "new_password": "New password cannot be the same as the current password" })
+    is_valid, errors = validate_change_password_fields(data)
+    if not is_valid:
+        raise ValidationError(errors=errors)
     
-    # Hash new password
+    user = _get_existing_user(user_id)
+
+    _validate_new_password(
+        current_password=data["current_password"], 
+        new_password=data["new_password"], 
+        password_hash=user["password_hash"])
+
     hashed_password = hash_password(data["new_password"])
 
-    # Update database
-    (supabase
+    update_password_record(user_id, hashed_password)
+
+def update_password_record(user_id: str, hashed_password: str) -> None:
+    response = (supabase
      .table("users")
      .update({
          "password_hash": hashed_password
@@ -214,7 +232,5 @@ def change_user_password(
      .execute()
     )
 
-    return {
-        "success": True,
-        "message": "Password updated successfully"
-    }
+    if not response.data:
+        raise RuntimeError("Failed to update password")
