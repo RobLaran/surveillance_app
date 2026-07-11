@@ -1,4 +1,4 @@
-from ..core.supabase_client import supabase
+from app.core.supabase import supabase
 import os
 
 def upload_image(image, image_path, content_type="image/*"):
@@ -41,20 +41,3 @@ def get_image(path) -> str:
 
         image_url = str(result["signedURL"])
         return image_url
-
-# DELETE?
-def is_image_exists(path):
-    try:
-        response = supabase.storage.from_('avatars').exists(path)
-        public_url = supabase.storage.from_("avatars").create_signed_url(path,(60*60))
-
-        return {
-            "success": True,
-            "response": response,
-            "url": public_url
-        }
-    except Exception as e:
-        return {
-            "success": False,
-            "message": str(e)
-        }

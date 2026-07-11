@@ -1,4 +1,4 @@
-from app.core.supabase_client import supabase
+from backend.app.core.supabase import supabase
 
 def create_login_log(
     user_id: str | None = None,

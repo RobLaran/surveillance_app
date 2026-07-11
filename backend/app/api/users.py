@@ -1,8 +1,8 @@
 from flask import Blueprint, request
-from app.services.user_service import update_user, change_user_password
-from app.repositories.user_repository import get_all_users
 from flask_jwt_extended import get_jwt_identity, jwt_required
 
+from app.repositories.user_repository import get_all_users
+from app.services.user_service import update_user, change_user_password
 from app.utils.responses import success_response
 
 users = Blueprint('users', __name__)

@@ -1,9 +1,10 @@
 from flask import Blueprint, jsonify, request
-from app.services.storage_service import upload_image, get_image, is_image_exists, remove_image
 from flask_jwt_extended import (
     get_jwt_identity,
     jwt_required,
 )
+
+from app.services.storage_service import upload_image, get_image, is_image_exists, remove_image
 from app.repositories.user_repository import get_user_by_id, update_user_avatar
 from app.core.exceptions import NotFoundError, ValidationError
 
