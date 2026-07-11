@@ -1,4 +1,4 @@
-from .supabase_client import supabase
+from ..core.supabase_client import supabase
 
 def get_all_cameras():
     """Fetch all cameras from the database."""

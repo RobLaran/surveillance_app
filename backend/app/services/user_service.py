@@ -1,60 +1,14 @@
-
-
-
-from .supabase_client import supabase
-
-from typing import Any
-
 from app.core.exceptions import ConflictError, NotFoundError, ValidationError
 from app.types.user_types import CurrentUser, PublicUser, UpdateUserData, User
-from app.types.auth_types import CreateUserData
 from app.utils.auth.validators import validate_change_password_fields, validate_user_update_fields
 from app.utils.auth.sanitizers import sanitize_change_password_fields, sanitize_user_update_fields
 from app.utils.auth.password import verify_password, hash_password
 from app.services.login_log_service import get_last_login
 from app.services.storage_service import get_image
 from app.serializers.user_serializer import serialize_current_user, serialize_public_user
-
-def get_all_users() -> list[User]:
-    """Fetch all users from the database."""
-    response = (
-        supabase
-        .table("users")
-        .select("*")
-        .execute()
-    )
-
-    return response.data or []
-
-   
-def get_user_by_id(user_id: str) -> User | None:
-    """"Fetches user info by id"""
-    response = (
-        supabase
-        .table("users")
-        .select("*")
-        .eq("user_id", user_id)
-        .limit(1)
-        .execute()
-    )
-
-    return response.data[0] if response.data else None
+from app.repositories.user_repository import get_user_by_email, get_user_by_id, update_password_record, update_user_record
 
 
-def get_user_by_email(email: str) -> User | None:
-    """"Fetches user info by email"""
-    response = (
-        supabase
-        .table("users")
-        .select("*")
-        .eq("email", email)
-        .limit(1)
-        .execute()
-    )
-
-    return response.data[0] if response.data else None
-  
-    
 # =========================
 # BUILD CURRENT USER
 # =========================
@@ -76,20 +30,6 @@ def build_current_user(user_id: str, exp: int) -> CurrentUser:
         exp=exp
     )
 
-def create_user(payload: CreateUserData) -> User | None:
-    """"Creates user/Insert user into database"""
-    response = (supabase
-        .table("users")
-        .insert({
-            "first_name": payload['first_name'],
-            "last_name": payload['last_name'],
-            "email": payload['email'],
-            "password_hash": payload['password_hash'],
-        })
-        .execute()
-    )
-    
-    return response.data[0] if response.data else None
 
 def _get_existing_user(user_id: str) -> User:
     user = get_user_by_id(user_id)
@@ -99,6 +39,7 @@ def _get_existing_user(user_id: str) -> User:
     
     return user
 
+
 def _ensure_email_available(existing_email: str, new_email: str) -> None:
     if existing_email == new_email:
         return
@@ -107,6 +48,7 @@ def _ensure_email_available(existing_email: str, new_email: str) -> None:
 
     if user_with_email:
         raise ConflictError("Email already in use")
+
 
 def update_user(user_id: str, data: dict) -> PublicUser:
     """"Updates user info"""
@@ -144,35 +86,7 @@ def update_user(user_id: str, data: dict) -> PublicUser:
     
     return serialize_public_user(updated_user)
 
-def update_user_record(
-    user_id: str,
-    payload: UpdateUserData,
-) -> User:
-
-    response = (
-        supabase
-        .table("users")
-        .update(payload)
-        .eq("user_id", user_id)
-        .execute()
-    )
-
-    if not response.data:
-        raise RuntimeError("Failed to update user")
-
-    return response.data[0]
   
-def update_user_avatar(user_id, avatar_path):
-    """"Updates user avatar"""
-    response = (
-        supabase.table("users")
-        .update({"avatar_path": avatar_path})
-        .eq("user_id", user_id)
-        .execute()
-    )
-
-    return response
-
 def _validate_new_password(
     current_password: str,
     new_password: str,
@@ -194,6 +108,7 @@ def _validate_new_password(
                 "New password cannot be the same as the current password"
             }
         )
+
 
 def change_user_password(
     user_id: str,
@@ -221,16 +136,3 @@ def change_user_password(
     hashed_password = hash_password(data["new_password"])
 
     update_password_record(user_id, hashed_password)
-
-def update_password_record(user_id: str, hashed_password: str) -> None:
-    response = (supabase
-     .table("users")
-     .update({
-         "password_hash": hashed_password
-     })
-     .eq("user_id", user_id)
-     .execute()
-    )
-
-    if not response.data:
-        raise RuntimeError("Failed to update password")

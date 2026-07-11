@@ -1,4 +1,4 @@
-from .supabase_client import supabase
+from ..core.supabase_client import supabase
 import os
 
 def upload_image(image, image_path, content_type="image/*"):
