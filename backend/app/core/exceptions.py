@@ -21,6 +21,10 @@ class NotFoundError(AppError):
     def __init__(self, message):
         super().__init__(message, status_code=404)
 
+class InternalServerError(AppError):
+    def __init__(self, message="Internal Server Error"):
+        super().__init__(message, status_code=500)
+
 class StorageError(AppError):
     def __init__(self, message="Storage operation failed"):
         super().__init__(message, status_code=500)
