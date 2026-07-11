@@ -1,12 +1,11 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, request
 from flask_jwt_extended import (
     get_jwt_identity,
     jwt_required,
 )
 
 from app.services.storage_service import get_user_avatar, remove_user_avatar, upload_user_avatar
-from app.repositories.user_repository import get_user_by_id
-from app.core.exceptions import NotFoundError, ValidationError
+from app.core.exceptions import ValidationError
 from app.utils.responses import success_response
 
 storage = Blueprint('storage', __name__)
@@ -57,18 +56,7 @@ def remove_avatar():
 @jwt_required()
 def get_avatar():
     user_id = str(get_jwt_identity())
-
-    user = get_user_by_id(user_id)
-
-    if not user:
-        raise NotFoundError("User not found")
-    
-    avatar_path = str(user["avatar_path"])
-
-    if not avatar_path:
-        raise ValidationError("No avatar path")
-
-    result = get_user_avatar(avatar_path)
+    result = get_user_avatar(user_id)
 
     return success_response(
         message="User avatar retrieved successfully",
