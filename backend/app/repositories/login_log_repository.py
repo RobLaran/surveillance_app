@@ -1,4 +1,8 @@
+import logging
+
 from app.core.supabase import supabase
+
+from app.core.exceptions import InternalServerError
 
 def create_login_log(
     user_id: str | None = None,
@@ -7,7 +11,7 @@ def create_login_log(
     status: str = "SUCCESS",
     ip_address: str | None = None,
     user_agent: str | None = None,
-) -> dict | None:
+) -> dict:
     response = (
         supabase.table("login_logs")
         .insert({
@@ -21,7 +25,10 @@ def create_login_log(
         .execute()
     )
 
-    return response.data[0] if response.data else None
+    if not response.data:
+        raise InternalServerError("Failed to create login log")
+
+    return response.data[0] 
 
 
 def get_all_login_logs() -> list:
