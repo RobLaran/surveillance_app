@@ -46,9 +46,6 @@ def register_user(data: dict) -> PublicUser:
     }
 
     user = create_user(payload)
-
-    if user is None:
-        raise RuntimeError("Failed to create user")
     
     return serialize_public_user(user)
 
