@@ -13,7 +13,6 @@ logger = logging.getLogger(__name__)
 def _upload_image(file: bytes, path: str, content_type: str="image/*") -> None:
     try:
         bucket = supabase.storage.from_("avatars")
-
         bucket.upload(
             file=file,
             path=path,
@@ -34,6 +33,25 @@ def _remove_images(paths: list[str]) -> None:
     except Exception as e:
         logger.exception("STORAGE ERROR: %s", e)
         raise StorageError("Failed to remove image") from e
+
+
+def _get_image(path: str) -> str:
+    try:
+        bucket = supabase.storage.from_("avatars")
+        result = bucket.create_signed_url(
+            path,
+            60 * 60  # 1 hour
+        )
+
+        signed_url = str(result.get("signedURL"))
+
+        if not signed_url:
+            raise StorageError("Failed to generate image URL")
+
+        return signed_url
+    except Exception as e:
+        logger.exception("Failed to generate signed URL for '%s'", path)
+        raise StorageError("Failed to retrieve image") from e
 
 
 def upload_user_avatar(user_id: str, file: FileStorage) -> UploadImageResult:
@@ -59,13 +77,5 @@ def remove_user_avatar(user_id: str, avatar_path: str) -> RemoveImageResult:
         "path": avatar_path
     }
 
-    
-def get_image(path) -> str:
-        bucket = supabase.storage.from_("avatars")
-        result = bucket.create_signed_url(
-            path,
-            60 * 60  # 1 hour
-        )
-
-        image_url = str(result["signedURL"])
-        return image_url
+def get_user_avatar(avatar_path: str) -> str:
+    return _get_image(avatar_path)
