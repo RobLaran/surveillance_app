@@ -47,8 +47,7 @@ def register_user(data: dict) -> PublicUser:
 
     user = create_user(payload)
 
-    logger.info("New user registered: %s", email)
-    
+    logger.info("New user registered: %s", user["email"])
     return serialize_public_user(user)
 
 
@@ -74,6 +73,8 @@ def login_user(data: dict) -> PublicUser:
     user = authenticate_user(payload)
 
     log_login_success(user)
+
+    logger.info("Login successfully: %s", user["email"])
     return serialize_public_user(user)
 
 
