@@ -4,9 +4,9 @@ from cv2 import FileStorage
 
 from app.core.supabase import supabase
 
-from app.types.storage_types import UploadImageResult
-from app.repositories.user_repository import update_user_avatar
-from app.core.exceptions import StorageError
+from app.types.storage_types import RemoveImageResult, UploadImageResult
+from app.repositories.user_repository import get_user_by_id, update_user_avatar
+from app.core.exceptions import NotFoundError, StorageError, ValidationError
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +26,12 @@ def _upload_image(file: bytes, path: str, content_type: str="image/*") -> Upload
                "path": path
         }
 
+
+def _remove_images(paths: list[str]) -> None:
+    bucket = supabase.storage.from_("avatars")
+    bucket.remove(paths)
+
+
 def upload_user_avatar(user_id: str, file: FileStorage) -> UploadImageResult:
     try:
         avatar_path = f"{user_id}/avatar.png"
@@ -43,15 +49,23 @@ def upload_user_avatar(user_id: str, file: FileStorage) -> UploadImageResult:
           logger.warning("STORAGE ERROR: %s", e)
           raise StorageError("Failed to upload avatar image")
     
-def remove_image(paths: list):
-    bucket = supabase.storage.from_("avatars")
-    bucket.remove(paths)
-    
-    return {
-        "success": True,
-        "message": "Avatar removed successfully"
-    }
-   
+
+def remove_user_avatar(user_id: str, avatar_path: str) -> RemoveImageResult:
+    try:
+        if not avatar_path:
+            raise ValidationError(["No avatar path"])
+
+        _remove_images([avatar_path])
+
+        update_user_avatar(user_id, None)
+
+        return {
+             "path": avatar_path
+        }
+    except Exception as e:
+        logger.warning("STORAGE ERROR: %s", e)
+        raise StorageError("Failed to remove avatar image")
+
     
 def get_image(path) -> str:
         bucket = supabase.storage.from_("avatars")
