@@ -46,7 +46,8 @@ def get_user_by_email(email: str) -> User | None:
 
 def create_user(payload: CreateUserData) -> User:
     """"Creates user/Insert user into database"""
-    response = (supabase
+    response = (
+        supabase
         .table("users")
         .insert({
             "first_name": payload['first_name'],
@@ -66,7 +67,7 @@ def update_user_record(
     user_id: str,
     payload: UpdateUserData,
 ) -> User:
-
+    """Updates user details"""
     response = (
         supabase
         .table("users")
@@ -83,7 +84,8 @@ def update_user_record(
 def update_user_avatar(user_id: str, avatar_path: str | None) -> None:
     """"Updates user avatar"""
     response = (
-        supabase.table("users")
+        supabase
+        .table("users")
         .update({"avatar_path": avatar_path})
         .eq("user_id", user_id)
         .execute()
@@ -94,13 +96,15 @@ def update_user_avatar(user_id: str, avatar_path: str | None) -> None:
 
 
 def update_password_record(user_id: str, hashed_password: str) -> None:
-    response = (supabase
-     .table("users")
-     .update({
-         "password_hash": hashed_password
-     })
-     .eq("user_id", user_id)
-     .execute()
+    """"Updates user password"""
+    response = (
+        supabase
+        .table("users")
+        .update({
+            "password_hash": hashed_password
+        })
+        .eq("user_id", user_id)
+        .execute()
     )
 
     if not response.data:
