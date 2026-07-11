@@ -90,7 +90,7 @@ def authenticate_user(payload: LoginUserData) -> User:
 
     if not user or not is_valid:
         logger.warning("AUTH FAILED: %s", payload["email"])
-        raise UnauthorizedError("Invalid password")
+        raise UnauthorizedError()
 
     return user
 
