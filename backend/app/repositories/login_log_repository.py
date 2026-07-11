@@ -46,7 +46,7 @@ def get_all_login_logs() -> list[LoginLog]:
 
 
 def get_user_login_logs(user_id: str) -> list[LoginLog]:
-    """Fetch user login history from database"""
+    """Fetch user login logs from database"""
     response = (
         supabase
         .table("login_logs")
