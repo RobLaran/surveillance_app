@@ -20,3 +20,7 @@ class UnauthorizedError(AppError):
 class NotFoundError(AppError):
     def __init__(self, message):
         super().__init__(message, status_code=404)
+
+class StorageError(AppError):
+    def __init__(self, message="Storage operation failed"):
+        super().__init__(message, status_code=500)
