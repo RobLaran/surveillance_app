@@ -76,7 +76,7 @@ def update_user_record(
 
     return response.data[0]
 
-def update_user_avatar(user_id, avatar_path):
+def update_user_avatar(user_id: str, avatar_path: str | None) -> None:
     """"Updates user avatar"""
     response = (
         supabase.table("users")
@@ -85,7 +85,9 @@ def update_user_avatar(user_id, avatar_path):
         .execute()
     )
 
-    return response
+    if not response.data:
+        raise RuntimeError("Failed to update user avatar")
+
 
 def update_password_record(user_id: str, hashed_password: str) -> None:
     response = (supabase
