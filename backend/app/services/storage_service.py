@@ -52,9 +52,6 @@ def upload_user_avatar(user_id: str, file: FileStorage) -> UploadImageResult:
 
 def remove_user_avatar(user_id: str, avatar_path: str) -> RemoveImageResult:
     try:
-        if not avatar_path:
-            raise ValidationError(["No avatar path"])
-
         _remove_images([avatar_path])
 
         update_user_avatar(user_id, None)
