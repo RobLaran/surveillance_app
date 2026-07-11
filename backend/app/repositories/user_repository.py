@@ -13,7 +13,7 @@ def get_all_users() -> list[User]:
         .execute()
     )
 
-    return response.data
+    return response.data or []
 
    
 def get_user_by_id(user_id: str) -> User | None:
@@ -76,7 +76,7 @@ def update_user_record(
     )
 
     if not response.data:
-        raise RuntimeError("Failed to update user")
+        raise InternalServerError("Failed to update user")
 
     return response.data[0]
 
@@ -90,7 +90,7 @@ def update_user_avatar(user_id: str, avatar_path: str | None) -> None:
     )
 
     if not response.data:
-        raise RuntimeError("Failed to update user avatar")
+        raise InternalServerError("Failed to update user avatar")
 
 
 def update_password_record(user_id: str, hashed_password: str) -> None:
@@ -104,4 +104,4 @@ def update_password_record(user_id: str, hashed_password: str) -> None:
     )
 
     if not response.data:
-        raise RuntimeError("Failed to update password")
+        raise InternalServerError("Failed to update password")
