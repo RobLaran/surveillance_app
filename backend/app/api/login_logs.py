@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from app.services.login_log_service import get_all_login_logs, get_user_login_logs, get_last_login
+from app.repositories.login_log_repository import get_all_login_logs, get_user_login_logs, get_last_login
 
 login_logs = Blueprint("login_logs", __name__)
 

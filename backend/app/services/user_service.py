@@ -3,10 +3,10 @@ from app.types.user_types import CurrentUser, PublicUser, UpdateUserData, User
 from app.utils.auth.validators import validate_change_password_fields, validate_user_update_fields
 from app.utils.auth.sanitizers import sanitize_change_password_fields, sanitize_user_update_fields
 from app.utils.auth.password import verify_password, hash_password
-from app.services.login_log_service import get_last_login
 from app.services.storage_service import get_image
 from app.serializers.user_serializer import serialize_current_user, serialize_public_user
 from app.repositories.user_repository import get_user_by_email, get_user_by_id, update_password_record, update_user_record
+from app.repositories.login_log_repository import get_last_login
 
 
 # =========================

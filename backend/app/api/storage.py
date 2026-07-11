@@ -4,7 +4,7 @@ from flask_jwt_extended import (
     get_jwt_identity,
     jwt_required,
 )
-from app.services.user_service import get_user_by_id, update_user_avatar
+from app.repositories.user_repository import get_user_by_id, update_user_avatar
 from app.core.exceptions import NotFoundError, ValidationError
 
 storage = Blueprint('storage', __name__)
