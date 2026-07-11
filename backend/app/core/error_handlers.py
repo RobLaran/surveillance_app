@@ -1,5 +1,9 @@
+import logging
+
 from flask import jsonify
 from app.core.exceptions import AppError
+
+logger = logging.getLogger(__name__)
 
 def register_error_handlers(app):
 
@@ -17,7 +21,7 @@ def register_error_handlers(app):
 
     @app.errorhandler(Exception)
     def handle_unexpected_error(error):
-        print(f"UNEXPECTED ERROR: {error}")
+        logger.exception("Unexpected server error")
 
         return jsonify({
             "success": False,
