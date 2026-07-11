@@ -1,9 +1,14 @@
+import logging
+
 from cv2 import FileStorage
 
 from app.core.supabase import supabase
 
 from app.types.storage_types import UploadImageResult
 from app.repositories.user_repository import update_user_avatar
+from app.core.exceptions import StorageError
+
+logger = logging.getLogger(__name__)
 
 def _upload_image(file: bytes, path: str, content_type: str="image/*") -> UploadImageResult:
         bucket = supabase.storage.from_("avatars")
@@ -13,7 +18,7 @@ def _upload_image(file: bytes, path: str, content_type: str="image/*") -> Upload
             path=path,
             file_options={
                 "content-type": content_type,
-                "upsert": True
+                "upsert": "true"
             }
         )
 
@@ -22,17 +27,21 @@ def _upload_image(file: bytes, path: str, content_type: str="image/*") -> Upload
         }
 
 def upload_user_avatar(user_id: str, file: FileStorage) -> UploadImageResult:
-    avatar_path = f"{user_id}/avatar.png"
+    try:
+        avatar_path = f"{user_id}/avatar.png"
 
-    result = _upload_image(
-        file.read(),
-        avatar_path,
-        file.content_type
-    )
+        result = _upload_image(
+            file.read(),
+            avatar_path,
+            file.content_type
+        )
 
-    update_user_avatar(user_id, avatar_path)
+        update_user_avatar(user_id, avatar_path)
 
-    return result
+        return result
+    except Exception as e:
+          logger.warning("STORAGE ERROR: %s", e)
+          raise StorageError("Failed to upload avatar image")
     
 def remove_image(paths: list):
     bucket = supabase.storage.from_("avatars")

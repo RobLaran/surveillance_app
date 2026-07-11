@@ -4,9 +4,10 @@ from flask_jwt_extended import (
     jwt_required,
 )
 
-from app.services.storage_service import upload_image, get_image, remove_image
+from app.services.storage_service import get_image, remove_image, upload_user_avatar
 from app.repositories.user_repository import get_user_by_id, update_user_avatar
 from app.core.exceptions import NotFoundError, ValidationError
+from app.utils.responses import success_response
 
 storage = Blueprint('storage', __name__)
 
@@ -23,17 +24,15 @@ def upload_avatar():
 
     user_id = get_jwt_identity()
 
-    avatar_path = f"{user_id}/avatar.png"
-
-    result = upload_image(
-        file.read(),
-        avatar_path,
-        file.content_type
+    result = upload_user_avatar(
+        user_id=user_id,
+        file=file
     )
 
-    update_user_avatar(user_id, avatar_path)
-
-    return jsonify(result), 201
+    return success_response(
+        message="User avatar uploaded successfully",
+        data=result
+    )
 
 # =========================
 # REMOVE AVATAR IMAGE
