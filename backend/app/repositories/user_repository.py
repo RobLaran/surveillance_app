@@ -2,6 +2,7 @@ from app.core.supabase import supabase
 
 from app.types.auth_types import CreateUserData
 from app.types.user_types import UpdateUserData, User
+from app.core.exceptions import InternalServerError
 
 def get_all_users() -> list[User]:
     """Fetch all users from the database."""
@@ -12,7 +13,7 @@ def get_all_users() -> list[User]:
         .execute()
     )
 
-    return response.data or []
+    return response.data
 
    
 def get_user_by_id(user_id: str) -> User | None:
@@ -43,7 +44,7 @@ def get_user_by_email(email: str) -> User | None:
     return response.data[0] if response.data else None
 
 
-def create_user(payload: CreateUserData) -> User | None:
+def create_user(payload: CreateUserData) -> User:
     """"Creates user/Insert user into database"""
     response = (supabase
         .table("users")
@@ -55,8 +56,11 @@ def create_user(payload: CreateUserData) -> User | None:
         })
         .execute()
     )
+
+    if response.data:
+        raise InternalServerError("Failed to create user")
     
-    return response.data[0] if response.data else None
+    return response.data[0] 
 
 def update_user_record(
     user_id: str,
