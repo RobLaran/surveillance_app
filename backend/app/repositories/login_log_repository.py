@@ -1,8 +1,7 @@
-import logging
-
 from app.core.supabase import supabase
 
 from app.core.exceptions import InternalServerError
+from app.types.login_log_types import LoginLog
 
 def create_login_log(
     user_id: str | None = None,
@@ -11,7 +10,7 @@ def create_login_log(
     status: str = "SUCCESS",
     ip_address: str | None = None,
     user_agent: str | None = None,
-) -> dict:
+) -> LoginLog:
     response = (
         supabase.table("login_logs")
         .insert({
@@ -31,7 +30,7 @@ def create_login_log(
     return response.data[0] 
 
 
-def get_all_login_logs() -> list:
+def get_all_login_logs() -> list[LoginLog]:
     response = (
         supabase.table("login_logs")
         .select("*")
@@ -42,7 +41,7 @@ def get_all_login_logs() -> list:
     return response.data or []
 
 
-def get_user_login_logs(user_id: str) -> list:
+def get_user_login_logs(user_id: str) -> list[LoginLog]:
     response = (
         supabase.table("login_logs")
         .select("*")
@@ -54,7 +53,7 @@ def get_user_login_logs(user_id: str) -> list:
     return response.data or []
 
 
-def get_last_login(user_id: str) -> dict | None:
+def get_last_login(user_id: str) -> LoginLog | None:
     """"Fetches user last login"""
     response = (
         supabase.table("login_logs")
