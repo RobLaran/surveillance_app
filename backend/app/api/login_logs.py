@@ -1,7 +1,6 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from app.services.login_log_service import get_all_login_history, get_login_history
-from app.repositories.login_log_repository import get_last_login
+from app.services.login_log_service import get_all_login_history, get_last_login, get_login_history
 from app.utils.responses import success_response
 
 login_logs = Blueprint("login_logs", __name__)
@@ -24,7 +23,7 @@ def get_login_logs():
 @login_logs.route("/api/login-logs/me", methods=["GET"])
 @jwt_required()
 def login_history():
-    user_id = get_jwt_identity()
+    user_id = str(get_jwt_identity())
     result = get_login_history(user_id=user_id)
     return success_response(
         message="Login history retrieved successfully",
@@ -35,10 +34,13 @@ def login_history():
 # =========================
 # USER LOGIN LOGS
 # =========================
-@login_logs.route("/api/login-logs/me/latest", methods=["GET"])
+@login_logs.route("/api/login-logs/me/last", methods=["GET"])
 @jwt_required()
-def me_latest_login_log():
-    user_id = get_jwt_identity()
+def last_login():
+    user_id = str(get_jwt_identity())
     result = get_last_login(user_id=user_id)
-    return jsonify(result), 201
+    return success_response(
+        message="Last login retrieved successfully",
+        data=result
+    )
 

@@ -59,7 +59,7 @@ def get_user_login_logs(user_id: str) -> list[LoginLog]:
     return response.data or []
 
 
-def get_last_login(user_id: str) -> LoginLog | None:
+def get_user_last_login(user_id: str) -> LoginLog | None:
     """"Fetches user last login"""
     response = (
         supabase
