@@ -46,6 +46,8 @@ def register_user(data: dict) -> PublicUser:
     }
 
     user = create_user(payload)
+
+    logger.info("New user registered: %s", email)
     
     return serialize_public_user(user)
 
