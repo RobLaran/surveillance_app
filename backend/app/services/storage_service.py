@@ -1,25 +1,21 @@
 from app.core.supabase import supabase
-import os
 
-def upload_image(image, image_path, content_type="image/*"):
+from app.types.storage_types import UploadImageResult
+
+def upload_image(file: bytes, path: str, content_type: str="image/*") -> UploadImageResult:
         bucket = supabase.storage.from_("avatars")
 
-        # Upload with overwrite enabled (NO need for exists check)
         bucket.upload(
-            image_path,
-            image,
-            {
+            file=file,
+            path=path,
+            file_options={
                 "content-type": content_type,
-                "upsert": "true"
+                "upsert": True
             }
         )
 
         return {
-            "success": True,
-            "message": "Image uploaded successfully",
-            "data": {
-                "path": image_path
-            }
+               "path": path
         }
     
 def remove_image(paths: list):
