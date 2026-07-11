@@ -11,8 +11,10 @@ def create_login_log(
     ip_address: str | None = None,
     user_agent: str | None = None,
 ) -> LoginLog:
+    """Generates user login log into database"""
     response = (
-        supabase.table("login_logs")
+        supabase
+        .table("login_logs")
         .insert({
             "user_id": user_id,
             "email": email,
@@ -31,8 +33,10 @@ def create_login_log(
 
 
 def get_all_login_logs() -> list[LoginLog]:
+    """Fetch all login logs from database"""
     response = (
-        supabase.table("login_logs")
+        supabase
+        .table("login_logs")
         .select("*")
         .order("created_at", desc=True)
         .execute()
@@ -42,8 +46,10 @@ def get_all_login_logs() -> list[LoginLog]:
 
 
 def get_user_login_logs(user_id: str) -> list[LoginLog]:
+    """Fetch user login history from database"""
     response = (
-        supabase.table("login_logs")
+        supabase
+        .table("login_logs")
         .select("*")
         .eq("user_id", user_id)
         .order("created_at", desc=True)
@@ -56,7 +62,8 @@ def get_user_login_logs(user_id: str) -> list[LoginLog]:
 def get_last_login(user_id: str) -> LoginLog | None:
     """"Fetches user last login"""
     response = (
-        supabase.table("login_logs")
+        supabase
+        .table("login_logs")
         .select("*")
         .eq("user_id", user_id)
         .order("created_at", desc=True)
