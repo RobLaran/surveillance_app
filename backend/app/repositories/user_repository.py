@@ -1,4 +1,4 @@
-from backend.app.core.supabase import supabase
+from app.core.supabase import supabase
 
 from app.types.auth_types import CreateUserData
 from app.types.user_types import UpdateUserData, User

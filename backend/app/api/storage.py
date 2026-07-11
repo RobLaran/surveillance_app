@@ -4,7 +4,7 @@ from flask_jwt_extended import (
     jwt_required,
 )
 
-from app.services.storage_service import upload_image, get_image, is_image_exists, remove_image
+from app.services.storage_service import upload_image, get_image, remove_image
 from app.repositories.user_repository import get_user_by_id, update_user_avatar
 from app.core.exceptions import NotFoundError, ValidationError
 
@@ -90,17 +90,3 @@ def get_avatar():
         jsonify(result),
         200 if result["success"] else 500
     )
-
-# =========================
-# DELETE THIS ROUTE(UNUSED)
-# =========================
-@storage.route("/api/avatars/exists/<string:path>", methods=["GET"])
-def is_exists(path):
-    result = is_image_exists(path)
-    if not result :
-        return jsonify({
-            "success": False,
-            "message": "Cannot find image"
-        }), 400
-    
-    return jsonify(result), 200 if result["success"] else 500

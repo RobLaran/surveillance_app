@@ -6,13 +6,12 @@ from flask_jwt_extended import create_access_token, create_refresh_token, set_ac
 from app.utils.auth.password import verify_password, hash_password
 from app.utils.auth.validators import validate_sign_up_fields, validate_sign_in_fields
 from app.utils.auth.sanitizers import sanitize_sign_up_fields, sanitize_sign_in_fields
-from app.utils.request import get_client_ip, get_user_agent
 from app.core.exceptions import ValidationError, ConflictError, UnauthorizedError
 from app.serializers.user_serializer import serialize_public_user
 from app.types.user_types import PublicUser, User
 from app.types.auth_types import CreateUserData, LoginUserData
 from app.repositories.user_repository import create_user, get_user_by_email
-from app.services.login_log_service import create_login_log
+from app.helpers.auth import log_login_success
 
 logger = logging.getLogger(__name__)
 
@@ -58,6 +57,7 @@ def register_user(data: dict) -> PublicUser:
 # LOGIN
 # =========================
 def login_user(data: dict) -> PublicUser:
+    """Authenticate a user and return its public representation."""
     if not data:
         raise ValidationError(errors=["Request body is required"])
 
@@ -74,16 +74,7 @@ def login_user(data: dict) -> PublicUser:
 
     user = authenticate_user(payload)
 
-    try :
-        create_login_log(
-            user_id=str(user["user_id"]),
-            email=user["email"],
-            ip_address=get_client_ip(),
-            user_agent=get_user_agent()
-        )
-    except Exception:
-        logger.exception("Failed to create login log")
-
+    log_login_success(user)
     return serialize_public_user(user)
 
 
@@ -99,9 +90,10 @@ def authenticate_user(payload: LoginUserData) -> User:
 
     if not user or not is_valid:
         logger.warning("AUTH FAILED: %s", payload["email"])
-        raise UnauthorizedError()
+        raise UnauthorizedError("Invalid password")
 
     return user
+
 
 # =========================
 # SET TOKENS
