@@ -15,3 +15,4 @@ def log_login_success(user: User) -> None:
         user_agent=get_user_agent(),
     )
 
+    logger.info("Login log created: %s", user["user_id"])
