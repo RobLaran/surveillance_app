@@ -26,7 +26,7 @@ def list_users() -> Response:
 @users.route("/api/users/me/update", methods=["PUT"])
 @jwt_required()
 def update_current_user() -> Response:
-    user_id = get_jwt_identity()
+    user_id = str(get_jwt_identity())
     updated_user = update_user(user_id, request.get_json())
 
     return success_response(
@@ -40,7 +40,7 @@ def update_current_user() -> Response:
 @users.route("/api/users/me/change-password", methods=["PUT"])
 @jwt_required()
 def change_password() -> Response:
-    user_id = get_jwt_identity()
+    user_id = str(get_jwt_identity())
 
     change_user_password(
         user_id=user_id,

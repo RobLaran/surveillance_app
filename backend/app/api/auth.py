@@ -61,7 +61,7 @@ def sign_in() -> Response:
 @jwt_required()
 def me() -> Response:
     current_user = build_current_user(
-        user_id=get_jwt_identity(),
+        user_id=str(get_jwt_identity()),
         exp=get_jwt()["exp"]
     )
     
@@ -76,7 +76,7 @@ def me() -> Response:
 @auth.route("/api/auth/refresh", methods=["POST"])
 @jwt_required(refresh=True)
 def refresh() -> Response:
-    new_access_token = create_access_token(identity=get_jwt_identity())
+    new_access_token = create_access_token(identity=str(get_jwt_identity()))
     response = success_response(
         message="Token refreshed successfully"
     )

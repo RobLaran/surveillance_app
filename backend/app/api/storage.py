@@ -22,7 +22,7 @@ def upload_avatar():
     if not file:
         raise ValidationError("No file uploaded")
 
-    user_id = get_jwt_identity()
+    user_id = str(get_jwt_identity())
 
     result = upload_user_avatar(
         user_id=user_id,
@@ -41,19 +41,8 @@ def upload_avatar():
 @storage.route("/api/avatars/me/remove", methods=["DELETE"])
 @jwt_required()
 def remove_avatar():
-    user_id = get_jwt_identity()
-
-    user = get_user_by_id(str(user_id))
-
-    if not user:
-        raise NotFoundError("User not found")
-
-    avatar_path = str(user["avatar_path"])
-
-    if not avatar_path:
-        raise ValidationError("No avatar path")
-
-    result = remove_user_avatar(user_id, avatar_path)
+    user_id = str(get_jwt_identity())
+    result = remove_user_avatar(user_id)
 
     return success_response(
         message="User avatar removed successfully",
@@ -67,9 +56,9 @@ def remove_avatar():
 @storage.route("/api/avatars/me", methods=["GET"])
 @jwt_required()
 def get_avatar():
-    user_id = get_jwt_identity()
+    user_id = str(get_jwt_identity())
 
-    user = get_user_by_id(str(user_id))
+    user = get_user_by_id(user_id)
 
     if not user:
         raise NotFoundError("User not found")

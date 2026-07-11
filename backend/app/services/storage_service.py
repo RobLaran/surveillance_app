@@ -5,8 +5,8 @@ from cv2 import FileStorage
 from app.core.supabase import supabase
 
 from app.types.storage_types import RemoveImageResult, UploadImageResult
-from app.repositories.user_repository import update_user_avatar
-from app.core.exceptions import StorageError
+from app.repositories.user_repository import get_user_by_id, update_user_avatar
+from app.core.exceptions import NotFoundError, StorageError, ValidationError
 
 logger = logging.getLogger(__name__)
 
@@ -69,7 +69,17 @@ def upload_user_avatar(user_id: str, file: FileStorage) -> UploadImageResult:
     }
     
 
-def remove_user_avatar(user_id: str, avatar_path: str) -> RemoveImageResult:
+def remove_user_avatar(user_id: str) -> RemoveImageResult:
+    user = get_user_by_id(str(user_id))
+
+    if not user:
+        raise NotFoundError("User not found")
+
+    avatar_path = str(user["avatar_path"])
+
+    if not avatar_path:
+        raise ValidationError("No avatar path")
+
     _remove_images([avatar_path])
     update_user_avatar(user_id, None)
 
