@@ -13,15 +13,13 @@ from app.services.login_log_service import get_last_login
 # BUILD CURRENT USER
 # =========================
 def build_current_user(user_id: str, exp: int) -> CurrentUser:
-    user = get_user_by_id(user_id=user_id)
+    user = get_user_by_id(user_id)
     
     if not user:
         raise NotFoundError("User not found")
     
-    login_log = get_last_login(user_id=user_id)
-
-    avatar_path = user.get("avatar_path")
-    avatar_url = get_user_avatar(avatar_path) if avatar_path else None
+    login_log = get_last_login(user_id)
+    avatar_url = get_user_avatar(user_id) 
 
     return serialize_current_user(
         user=user,
