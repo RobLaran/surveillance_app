@@ -4,7 +4,7 @@ from flask_jwt_extended import (
     jwt_required,
 )
 
-from app.services.storage_service import get_image, remove_user_avatar, upload_user_avatar
+from app.services.storage_service import get_user_avatar, remove_user_avatar, upload_user_avatar
 from app.repositories.user_repository import get_user_by_id
 from app.core.exceptions import NotFoundError, ValidationError
 from app.utils.responses import success_response
@@ -72,23 +72,16 @@ def get_avatar():
     user = get_user_by_id(str(user_id))
 
     if not user:
-        return jsonify({
-            "success": False,
-            "message": "User not found"
-        }), 404
-
-    avatar_path = user.get("avatar_path")
+        raise NotFoundError("User not found")
+    
+    avatar_path = str(user["avatar_path"])
 
     if not avatar_path:
-        return jsonify({
-            "success": False,
-            "message": "Avatar not found",
-            "user": user
-        }), 404
+        raise ValidationError("No avatar path")
 
-    result = get_image(avatar_path)
+    result = get_user_avatar(avatar_path)
 
-    return (
-        jsonify(result),
-        200 if result["success"] else 500
+    return success_response(
+        message="User avatar retrieved successfully",
+        data=result
     )
