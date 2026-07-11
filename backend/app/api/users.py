@@ -1,4 +1,4 @@
-from flask import Blueprint, request
+from flask import Blueprint, Response, request
 from flask_jwt_extended import get_jwt_identity, jwt_required
 
 from app.repositories.user_repository import get_all_users
@@ -12,7 +12,7 @@ users = Blueprint('users', __name__)
 # =========================
 @users.route('/api/users', methods=['GET'])
 @jwt_required()
-def list_users():
+def list_users() -> Response:
     """Returns all users from the database."""
     users = get_all_users()
     return success_response(
@@ -25,7 +25,7 @@ def list_users():
 # =========================
 @users.route("/api/users/me/update", methods=["PUT"])
 @jwt_required()
-def update_current_user():
+def update_current_user() -> Response:
     user_id = get_jwt_identity()
     updated_user = update_user(user_id, request.get_json())
 
@@ -39,7 +39,7 @@ def update_current_user():
 # =========================
 @users.route("/api/users/me/change-password", methods=["PUT"])
 @jwt_required()
-def change_password():
+def change_password() -> Response:
     user_id = get_jwt_identity()
 
     change_user_password(
