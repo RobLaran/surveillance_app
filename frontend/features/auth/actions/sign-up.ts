@@ -4,11 +4,11 @@ import type { AuthResult, SignUpValues } from "@/features/auth/types/auth";
 
 export async function signUpAction(values: SignUpValues): Promise<AuthResult> {
     try {
-        const { data } = await signUpRequest(values);
+        const message = await signUpRequest(values);
 
         return {
             success: true,
-            message: data.message ?? "Signed in successfully",
+            message: message,
         };
     } catch (error) {
         const err = error as ApiError;

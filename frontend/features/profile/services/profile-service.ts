@@ -1,4 +1,5 @@
 import { request } from "@/lib/api-client";
+import { UpdateCurrentUserValues } from "@/features/profile/types/profile";
 
 type ChangePasswordValues = {
     current_password: string;
@@ -27,7 +28,7 @@ export async function getAvatar(): Promise<string> {
     return data.url;
 }
 
-export async function updateCurrentUser(values: FormData) {
+export async function updateCurrentUser(values: UpdateCurrentUserValues) {
     const { message } = await request.put("/api/users/me/update", values);
 
     return message;

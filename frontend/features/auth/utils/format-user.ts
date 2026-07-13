@@ -5,7 +5,7 @@ import {
     formatLastLogin,
 } from "@/utils/format-date";
 
-export function formatUser(data: CurrentUser): User {
+export function formatUser(data: User): CurrentUser {
     return {
         id: data.user_id,
         firstName: data.first_name,

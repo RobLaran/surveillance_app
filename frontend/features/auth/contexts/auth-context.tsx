@@ -18,11 +18,11 @@ import {
 } from "@/features/auth/services/auth-service";
 import { AUTH_STATUS } from "@/features/auth/constants/auth-status";
 import { formatUser } from "@/features/auth/utils/format-user";
-import { User } from "@/features/auth/types/auth";
+import { CurrentUser } from "@/features/auth/types/auth";
 
 type AuthContextType = {
-    user: User | null;
-    loadUser: () => Promise<User | null>;
+    user: CurrentUser | null;
+    loadUser: () => Promise<CurrentUser | null>;
     logout: () => Promise<void>;
     isLoading: boolean;
     isAuthenticated: boolean;
@@ -40,10 +40,10 @@ const PUBLIC_ROUTES = new Set<string>(["/sign-in", "/sign-up"]);
 export function AuthProvider({ children }: AuthProviderProps) {
     const pathname = usePathname();
 
-    const [user, setUser] = useState<User | null>(null);
+    const [user, setUser] = useState<CurrentUser | null>(null);
     const [status, setStatus] = useState<string>(AUTH_STATUS.LOADING);
 
-    const requestRef = useRef<Promise<User | null> | null>(null);
+    const requestRef = useRef<Promise<CurrentUser | null> | null>(null);
     const mountedRef = useRef<boolean>(false);
 
     useEffect(() => {
@@ -54,7 +54,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         };
     }, []);
 
-    const loadUser = useCallback(async (): Promise<User | null> => {
+    const loadUser = useCallback(async (): Promise<CurrentUser | null> => {
         if (PUBLIC_ROUTES.has(pathname)) {
             if (mountedRef.current) {
                 setUser(null);
@@ -73,7 +73,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         requestRef.current = (async () => {
             try {
                 const currentUser = await fetchCurrentUser();
-                const formattedUser = formatUser(currentUser) as User;
+                const formattedUser = formatUser(currentUser) as CurrentUser;
 
                 if (!mountedRef.current) {
                     return null;

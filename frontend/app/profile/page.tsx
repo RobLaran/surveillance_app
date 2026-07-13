@@ -53,6 +53,7 @@ import type {
     Profile,
     LoginLog,
     EditedProfile,
+    UpdateCurrentUserValues,
 } from "@/features/profile/types/profile";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -127,18 +128,18 @@ export default function ProfilePage() {
         setIsSaving(true);
 
         try {
-            const formData = new FormData();
-
             const [firstName, ...rest] = editedProfile.name.trim().split(" ");
             const lastName = rest.join(" ");
 
-            formData.append("first_name", firstName);
-            formData.append("last_name", lastName);
-            formData.append("email", editedProfile.email);
-            formData.append("phone_number", editedProfile.phone);
-            formData.append("location", editedProfile.location);
+            const values: UpdateCurrentUserValues = {
+                firstName: firstName,
+                lastName: lastName,
+                email: editedProfile.email,
+                phone: editedProfile.phone,
+                location: editedProfile.location,
+            };
 
-            const result = await updateCurrentUserAction(formData);
+            const result = await updateCurrentUserAction(values);
 
             if (!result.success) {
                 if (result.errors) {

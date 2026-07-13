@@ -2,17 +2,13 @@ import { request } from "@/lib/api-client";
 import { getAvatar } from "@/features/profile/services/profile-service";
 import { CurrentUserResponse } from "@/features/auth/types/responses";
 import type {
-    CurrentUser,
+    User,
     SignInValues,
     SignUpValues,
 } from "@/features/auth/types/auth";
 
-export async function fetchCurrentUser(): Promise<CurrentUser> {
-    const { data } = await request.get<CurrentUser>("/api/auth/me");
-
-    if (data.avatar) {
-        data.avatar_url = await getAvatar();
-    }   
+export async function fetchCurrentUser(): Promise<User> {
+    const { data } = await request.get<User>("/api/auth/me");
 
     return data;
 }
@@ -27,10 +23,12 @@ export async function signInRequest(
     return message;
 }
 
-export async function signUpRequest(payload: SignUpValues) {
-    return request.post("/api/auth/sign-up", payload, {
+export async function signUpRequest(payload: SignUpValues): Promise<string> {
+    const { message } = await request.post("/api/auth/sign-up", payload, {
         auth: false,
     });
+
+    return message;
 }
 
 export async function logoutRequest() {

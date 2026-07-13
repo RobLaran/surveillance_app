@@ -1,9 +1,10 @@
 import { updateCurrentUser } from "@/features/profile/services/profile-service";
 import { ApiError } from "@/lib/api-client";
+import { UpdateCurrentUserValues } from "@/features/profile/types/profile";
 
-export async function updateCurrentUserAction(formData: FormData) {
+export async function updateCurrentUserAction(values: UpdateCurrentUserValues) {
     try {
-        const message = await updateCurrentUser(formData);
+        const message = await updateCurrentUser(values);
 
         return {
             success: true,

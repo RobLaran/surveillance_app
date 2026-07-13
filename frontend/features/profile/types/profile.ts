@@ -2,8 +2,8 @@ export type Profile = {
     id: string;
     name: string;
     email: string;
-    phone: string;
-    location: string;
+    phone: string | null;
+    location: string | null;
     joinDate: string;
     lastLogin: string | null;
     avatar: string | null;
@@ -25,6 +25,6 @@ export interface UpdateCurrentUserValues {
     firstName: string;
     lastName: string;
     email: string;
-    password: string;
-    confirmPassword: string;
+    phone: string | null;
+    location: string | null;
 }
