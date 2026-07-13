@@ -19,7 +19,7 @@ def upload_avatar():
     file = request.files.get("avatar")
 
     if not file:
-        raise ValidationError("No file uploaded")
+        raise ValidationError(errors=["No file uploaded"])
 
     user_id = str(get_jwt_identity())
 

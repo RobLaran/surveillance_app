@@ -78,7 +78,7 @@ def remove_user_avatar(user_id: str) -> RemoveImageResult:
     avatar_path = str(user["avatar_path"])
 
     if not avatar_path:
-        raise ValidationError("No avatar path")
+        raise ValidationError(errors=["No avatar path"])
 
     _remove_images([avatar_path])
     update_user_avatar(user_id, None)
