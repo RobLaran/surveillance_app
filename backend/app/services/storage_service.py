@@ -87,15 +87,15 @@ def remove_user_avatar(user_id: str) -> RemoveImageResult:
         "path": avatar_path
     }
 
-def get_user_avatar(user_id: str) -> str:
+def get_user_avatar(user_id: str) -> str | None:
     user = get_user_by_id(user_id)
 
     if not user:
         raise NotFoundError("User not found")
     
-    avatar_path = str(user["avatar_path"])
+    avatar_path = user["avatar_path"]
 
     if not avatar_path:
-        raise ValidationError("No avatar path")
+        return None
 
     return _get_image(avatar_path)
