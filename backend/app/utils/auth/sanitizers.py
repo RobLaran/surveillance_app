@@ -18,10 +18,10 @@ def sanitize_sign_in_fields(data: dict) -> dict:
 def sanitize_user_update_fields(data: dict) -> dict:
     """"Clean data inputs"""
     return {
-        "first_name": clean_str(data.get('first_name')),
-        "last_name": clean_str(data.get('last_name')),
+        "first_name": clean_str(data.get('firstName')),
+        "last_name": clean_str(data.get('lastName')),
         "email": clean_str(data.get('email')).lower(),
-        "phone_number": clean_str(data.get('phone_number')),
+        "phone_number": clean_str(data.get('phone')),
         "location": clean_str(data.get('location'))
     }
 
