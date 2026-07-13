@@ -58,7 +58,7 @@ def create_user(payload: CreateUserData) -> User:
         .execute()
     )
 
-    if response.data:
+    if not response.data:
         raise InternalServerError("Failed to create user")
     
     return response.data[0] 
