@@ -60,5 +60,7 @@ def get_avatar():
 
     return success_response(
         message="User avatar retrieved successfully",
-        data=result
+        data={
+            "avatar_url": result
+        }
     )
