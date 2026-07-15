@@ -59,7 +59,7 @@ def get_user_login_logs(user_id: str) -> list[LoginLog]:
     return response.data or []
 
 
-def get_user_last_login(user_id: str) -> LoginLog | None:
+def get_user_last_login(user_id: str) -> LoginLog:
     """"Fetches user last login"""
     response = (
         supabase
@@ -71,4 +71,7 @@ def get_user_last_login(user_id: str) -> LoginLog | None:
         .execute()
     )
 
-    return response.data[0] if response.data else None
+    if not response.data:
+        raise InternalServerError("Failed to fetch last login log")
+
+    return response.data[0]
