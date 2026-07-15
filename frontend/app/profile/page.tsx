@@ -159,7 +159,6 @@ export default function ProfilePage() {
             await loadUser();
 
             isSetEditing(false);
-        } finally {
             setIsSaving(false);
         }
     };
