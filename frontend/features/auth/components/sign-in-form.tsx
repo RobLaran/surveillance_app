@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
-import { signInAction } from "@/features/auth/actions/sign-in";
 import { AuthLayout } from "@/features/auth/components/auth-layout";
 import { AuthCard } from "@/features/auth/components/auth-card";
 import { Logo } from "@/features/dashboard/components/logo";
@@ -21,15 +20,13 @@ import {
     FormControl,
     FormMessage,
 } from "@/components/ui/form";
-
-type SignInFormValues = {
-    email: string;
-    password: string;
-};
+import { ApiError } from "@/lib/api-client";
+import { SignInValues } from "@/features/auth/types/auth";
+import { signInRequest } from "../services/auth-service";
 
 export function SignInForm() {
     const router = useRouter();
-    const form = useForm<SignInFormValues>({
+    const form = useForm<SignInValues>({
         defaultValues: {
             email: "",
             password: "",
@@ -40,25 +37,26 @@ export function SignInForm() {
         formState: { isSubmitting },
     } = form;
 
-    async function onSubmit(values: SignInFormValues) {
-        const result = await signInAction(values);
+    async function onSubmit(values: SignInValues) {
+        try {
+            const message = await signInRequest(values);
+            toast.success(message);
 
-        if (!result.success) {
-            if (result.errors) {
-                Object.values(result.errors)
+            router.replace("/");
+            router.refresh();
+        } catch (err) {
+            const error = err as ApiError;
+
+            if (error.errors) {
+                Object.values(error.errors)
                     .reverse()
-                    .forEach((error) => toast.error(String(error)));
-
+                    .forEach((err) => toast.error(err));
                 return;
             }
 
-            toast.error(result.message || "Something went wrong");
+            toast.error(error.message);
             return;
         }
-        toast.success(result.message || "Sign in successful 🎉");
-
-        router.replace("/");
-        router.refresh();
     }
 
     return (

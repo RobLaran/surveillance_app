@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import Link from "next/link";
 
-import { signUpAction } from "@/features/auth/actions/sign-up";
+import { signUpRequest } from "@/features/auth/services/auth-service";
 import { PasswordStrengthBar } from "@/features/auth/components/password-strength-bar";
 import { AuthLayout } from "@/features/auth/components/auth-layout";
 import { AuthCard } from "@/features/auth/components/auth-card";
@@ -22,19 +22,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-
-type SignUpFormValues = {
-    firstName: string;
-    lastName: string;
-    email: string;
-    password: string;
-    confirmPassword: string;
-};
+import { ApiError } from "@/lib/api-client";
+import { SignUpValues } from "@/features/auth/types/auth";
 
 export function SignUpForm() {
     const router = useRouter();
 
-    const form = useForm<SignUpFormValues>({
+    const form = useForm<SignUpValues>({
         mode: "onChange",
         defaultValues: {
             firstName: "",
@@ -54,25 +48,26 @@ export function SignUpForm() {
         formState: { isSubmitting },
     } = form;
 
-    async function onSubmit(values: SignUpFormValues) {
-        const result = await signUpAction(values);
+    async function onSubmit(values: SignUpValues) {
+        try {
+            const message = await signUpRequest(values);
+            toast.success(message);
 
-        if (!result.success) {
-            if (result.errors) {
-                Object.values(result.errors)
+            form.reset();
+            router.push("/sign-in");
+        } catch (err) {
+            const error = err as ApiError;
+
+            if (error.errors) {
+                Object.values(error.errors)
                     .reverse()
-                    .forEach((err) => toast.error(err as string));
+                    .forEach((err) => toast.error(err));
                 return;
             }
 
-            toast.error(result.message);
+            toast.error(error.message);
             return;
         }
-
-        toast.success(result.message || "Account created successfully 🎉");
-
-        form.reset();
-        router.push("/sign-in");
     }
 
     return (
