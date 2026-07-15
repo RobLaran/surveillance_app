@@ -23,17 +23,12 @@ export class ApiError extends Error {
 export interface ApiResponseBody<TData = unknown> {
     success: boolean;
     message: string;
-    data?: TData;
+    data: TData;
     errors?: Record<string, string> | string[];
 }
 
 type ApiOptions = RequestInit & {
     auth?: boolean;
-};
-
-type ApiSuccessResponse<TData = void> = {
-    message: string;
-    data: TData;
 };
 
 // =========================
@@ -59,7 +54,7 @@ async function apiClientInternal<TData = unknown>(
     endpoint: string,
     options: ApiOptions = {},
     isRetry = false,
-): Promise<ApiSuccessResponse<TData>> {
+): Promise<ApiResponseBody<TData>> {
     const { auth = true, ...fetchOptions } = options;
 
     const controller = new AbortController();
@@ -78,7 +73,7 @@ async function apiClientInternal<TData = unknown>(
         });
     } catch (err) {
         if (err instanceof DOMException && err.name === "AbortError") {
-            throw new Error(API_ERRORS.TIMEOUT ?? "Request timed out");
+            throw new ApiError(API_ERRORS.TIMEOUT ?? "Request timed out", 408);
         }
         throw err;
     } finally {
@@ -104,11 +99,11 @@ async function apiClientInternal<TData = unknown>(
             window.location.href = "/sign-in";
         }
 
-        throw new Error(API_ERRORS.UNAUTHENTICATED);
+        throw new ApiError(API_ERRORS.UNAUTHENTICATED, 401);
     }
 
     if (response.status === 500) {
-        throw new Error(API_ERRORS.INTERNAL_SERVER_ERROR);
+        throw new ApiError(API_ERRORS.INTERNAL_SERVER_ERROR, 500);
     }
 
     let body: ApiResponseBody<TData> | null = null;
@@ -135,10 +130,7 @@ async function apiClientInternal<TData = unknown>(
         throw new ApiError("Empty response from server", response.status);
     }
 
-    return {
-        message: body.message,
-        data: body.data as TData,
-    };
+    return body;
 }
 
 // Merge extra headers/body out of `options` BEFORE spreading the rest,
