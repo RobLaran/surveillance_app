@@ -22,8 +22,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff, Lock, Check, X } from "lucide-react";
-import { changePasswordAction } from "@/features/profile/actions/change-password.action";
 import { cn } from "@/lib/utils";
+import { ApiError } from "@/lib/api-client";
+import { changePasswordRequest } from "@/features/profile/services/profile-service";
 
 type ChangePasswordDialogProps = {
     open: boolean;
@@ -117,26 +118,26 @@ export function ChangePasswordDialog({
     };
 
     const onSubmit = async (values: ChangePasswordForm): Promise<void> => {
-        const result = await changePasswordAction(values);
+        try {
+            const message = await changePasswordRequest(values);
+            toast.success(message);
+            handleClose(false);
+        } catch (err) {
+            const error = err as ApiError;
 
-        if (!result.success) {
-            if (result.errors) {
-                Object.entries(result.errors).forEach(([field, message]) => {
+            if (error.errors) {
+                Object.entries(error.errors).forEach(([field, message]) => {
                     form.setError(field as keyof ChangePasswordForm, {
                         type: "server",
                         message: String(message),
                     });
                 });
-
                 return;
             }
 
-            toast.error(result.message);
+            toast.error(error.message);
             return;
         }
-
-        toast.success(result.message || "Password changed");
-        handleClose(false);
     };
 
     return (
