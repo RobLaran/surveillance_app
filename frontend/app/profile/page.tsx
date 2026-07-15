@@ -55,6 +55,7 @@ import {
     updateCurrentUserRequest,
     uploadAvatarRequest,
 } from "@/features/profile/services/profile-service";
+import Loading from "@/app/loading";
 
 const EMPTY_PROFILE: Profile = {
     id: "",
@@ -278,7 +279,7 @@ export default function ProfilePage() {
     }
 
     if (isInitializing) {
-        return <div>Loading...</div>;
+        return <Loading />;
     }
 
     return (
