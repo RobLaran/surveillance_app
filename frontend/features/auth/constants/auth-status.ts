@@ -1,5 +1,6 @@
 export const AUTH_STATUS = {
-    LOADING: "loading",
+    INITIALIZING: "initializing",
+    REFRESHING: "refreshing",
     AUTHENTICATED: "authenticated",
     UNAUTHENTICATED: "unauthenticated",
     EXPIRED: "expired",
