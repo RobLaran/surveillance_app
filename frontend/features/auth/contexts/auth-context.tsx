@@ -13,18 +13,19 @@ import {
 import { usePathname } from "next/navigation";
 
 import {
-    fetchCurrentUser,
+    fetchCurrentUserRequest,
     logoutRequest,
 } from "@/features/auth/services/auth-service";
 import { AUTH_STATUS } from "@/features/auth/constants/auth-status";
 import { formatUser } from "@/features/auth/utils/format-user";
-import { CurrentUser } from "@/features/auth/types/auth";
+import { User } from "@/features/auth/types/auth";
 
 type AuthContextType = {
-    user: CurrentUser | null;
-    loadUser: () => Promise<CurrentUser | null>;
+    user: User | null;
+    refreshUser: () => Promise<User | null>;
     logout: () => Promise<void>;
-    isLoading: boolean;
+    isInitializing: boolean;
+    isRefreshing: boolean;
     isAuthenticated: boolean;
     isUnauthenticated: boolean;
 };
@@ -35,15 +36,17 @@ type AuthProviderProps = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+type AuthStatus = (typeof AUTH_STATUS)[keyof typeof AUTH_STATUS];
+
 const PUBLIC_ROUTES = new Set<string>(["/sign-in", "/sign-up"]);
 
 export function AuthProvider({ children }: AuthProviderProps) {
     const pathname = usePathname();
 
-    const [user, setUser] = useState<CurrentUser | null>(null);
-    const [status, setStatus] = useState<string>(AUTH_STATUS.LOADING);
+    const [user, setUser] = useState<User | null>(null);
+    const [status, setStatus] = useState<AuthStatus>(AUTH_STATUS.INITIALIZING);
 
-    const requestRef = useRef<Promise<CurrentUser | null> | null>(null);
+    const requestRef = useRef<Promise<User | null> | null>(null);
     const mountedRef = useRef<boolean>(false);
 
     useEffect(() => {
@@ -54,51 +57,67 @@ export function AuthProvider({ children }: AuthProviderProps) {
         };
     }, []);
 
-    const loadUser = useCallback(async (): Promise<CurrentUser | null> => {
-        if (PUBLIC_ROUTES.has(pathname)) {
-            if (mountedRef.current) {
-                setUser(null);
-                setStatus(AUTH_STATUS.UNAUTHENTICATED);
-            }
-
-            return null;
-        }
-
+    const fetchUser = useCallback(async (): Promise<User | null> => {
         if (requestRef.current) {
             return requestRef.current;
         }
 
-        setStatus(AUTH_STATUS.LOADING);
-
         requestRef.current = (async () => {
             try {
-                const currentUser = await fetchCurrentUser();
-                const formattedUser = formatUser(currentUser) as CurrentUser;
+                const currentUser = await fetchCurrentUserRequest();
+                const formattedUser = formatUser(currentUser);
 
-                if (!mountedRef.current) {
-                    return null;
-                }
+                if (!mountedRef.current) return null;
 
                 setUser(formattedUser);
-                setStatus(AUTH_STATUS.AUTHENTICATED);
-
                 return formattedUser;
-            } catch {
-                if (!mountedRef.current) {
-                    return null;
-                }
-
-                setUser(null);
-                setStatus(AUTH_STATUS.UNAUTHENTICATED);
-
-                return null;
             } finally {
                 requestRef.current = null;
             }
         })();
 
         return requestRef.current;
-    }, [pathname]);
+    }, []);
+
+    const initAuth = useCallback(async () => {
+        if (PUBLIC_ROUTES.has(pathname)) {
+            setUser(null);
+            setStatus(AUTH_STATUS.UNAUTHENTICATED);
+            return null;
+        }
+
+        setStatus(AUTH_STATUS.INITIALIZING);
+
+        try {
+            const user = await fetchUser();
+
+            setStatus(AUTH_STATUS.AUTHENTICATED);
+
+            return user;
+        } catch {
+            setUser(null);
+            setStatus(AUTH_STATUS.UNAUTHENTICATED);
+
+            return null;
+        }
+    }, [pathname, fetchUser]);
+
+    const refreshUser = useCallback(async () => {
+        setStatus(AUTH_STATUS.REFRESHING);
+
+        try {
+            const user = await fetchUser();
+
+            setStatus(AUTH_STATUS.AUTHENTICATED);
+
+            return user;
+        } catch (error) {
+            // Keep existing user.
+            setStatus(AUTH_STATUS.AUTHENTICATED);
+
+            throw error;
+        }
+    }, [fetchUser]);
 
     const logout = useCallback(async (): Promise<void> => {
         try {
@@ -112,19 +131,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }, []);
 
     useEffect(() => {
-        void loadUser();
-    }, [loadUser]);
+        void initAuth();
+    }, [initAuth]);
 
     const value = useMemo<AuthContextType>(
         () => ({
             user,
-            loadUser,
+            refreshUser,
             logout,
-            isLoading: status === AUTH_STATUS.LOADING,
+            isInitializing: status === AUTH_STATUS.INITIALIZING,
+            isRefreshing: status === AUTH_STATUS.REFRESHING,
             isAuthenticated: status === AUTH_STATUS.AUTHENTICATED,
             isUnauthenticated: status === AUTH_STATUS.UNAUTHENTICATED,
         }),
-        [user, status, loadUser, logout],
+        [user, status, initAuth, refreshUser, logout],
     );
 
     return (
