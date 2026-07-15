@@ -22,7 +22,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -30,7 +29,6 @@ import {
     Mail,
     Phone,
     MapPin,
-    Calendar,
     Edit,
     Save,
     X,
@@ -39,28 +37,29 @@ import {
     Copy,
     Check,
     Shield,
-    History,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { useAuth } from "@/features/auth/contexts/auth-context";
-import { uploadAvatarAction } from "@/features/profile/actions/upload-avatar";
-import { removeAvatarAction } from "@/features/profile/actions/remove-avatar";
-import { updateCurrentUserAction } from "@/features/profile/actions/update-current-user";
 import { ChangePasswordDialog } from "@/features/profile/components/change-password-dialog";
 import { LoginHistoryDialog } from "@/features/profile/components/login-history-dialog";
-import { getUserLoginLogs } from "@/features/profile/services/profile-service";
-import type {
+import {
     Profile,
-    LoginLog,
-    EditedProfile,
     UpdateCurrentUserValues,
 } from "@/features/profile/types/profile";
+import { LoginLog } from "@/features/profile/types/login-log";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { ApiError } from "@/lib/api-client";
+import {
+    getLoginHistoryRequest,
+    removeAvatarRequest,
+    updateCurrentUserRequest,
+    uploadAvatarRequest,
+} from "@/features/profile/services/profile-service";
 
 const EMPTY_PROFILE: Profile = {
     id: "",
-    name: "",
+    firstName: "",
+    lastName: "",
     email: "",
     phone: "",
     location: "",
@@ -71,9 +70,18 @@ const EMPTY_PROFILE: Profile = {
     userAgent: "",
 };
 
+const editableFields = [
+    "firstName",
+    "lastName",
+    "email",
+    "phone",
+    "location",
+] as const;
+
 export default function ProfilePage() {
     const router = useRouter();
-    const { user, logout, isLoading, loadUser } = useAuth();
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const { user, logout, isInitializing, refreshUser } = useAuth();
     const [isEditing, isSetEditing] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [copied, setCopied] = useState(false);
@@ -81,21 +89,28 @@ export default function ProfilePage() {
     const [editedProfile, setEditedProfile] = useState<Profile | null>(
         EMPTY_PROFILE,
     );
-    const fileInputRef = useRef<HTMLInputElement>(null);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
     const [isRemoveDialogOpen, setIsRemoveDialogOpen] = useState(false);
     const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
     const [isLoginHistoryOpen, setIsLoginHistoryOpen] = useState(false);
     const [isLoggingOut, setIsLoggingOut] = useState(false);
+    const [isUploading, setIsUploading] = useState(false);
+    const [isRemoving, setIsRemoving] = useState(false);
     const [loginLogs, setLoginLogs] = useState<LoginLog[]>([]);
+
+    const hasChanges =
+        profile != null &&
+        editedProfile != null &&
+        editableFields.some((field) => profile[field] !== editedProfile[field]);
 
     useEffect(() => {
         if (!user) return;
 
         const profileData: Profile = {
             id: user.id,
-            name: `${user.firstName} ${user.lastName}`,
+            firstName: user.firstName,
+            lastName: user.lastName,
             email: user.email,
             phone: user.phone,
             location: user.location,
@@ -123,50 +138,49 @@ export default function ProfilePage() {
     };
 
     const handleSave = async (): Promise<void> => {
-        if (!editedProfile) return;
+        if (!editedProfile || !profile) return;
+
+        if (!hasChanges) {
+            toast.info("No changes were made.");
+            return;
+        }
 
         setIsSaving(true);
 
         try {
-            const [firstName, ...rest] = editedProfile.name.trim().split(" ");
-            const lastName = rest.join(" ");
-
             const values: UpdateCurrentUserValues = {
-                firstName: firstName,
-                lastName: lastName,
+                firstName: editedProfile.firstName,
+                lastName: editedProfile.lastName,
                 email: editedProfile.email,
                 phone: editedProfile.phone,
                 location: editedProfile.location,
             };
 
-            const result = await updateCurrentUserAction(values);
+            const message = await updateCurrentUserRequest(values);
 
-            if (!result.success) {
-                if (result.errors) {
-                    Object.values(result.errors)
-                        .reverse()
-                        .forEach((error) => toast.error(String(error)));
+            toast.success(message);
 
-                    return;
-                }
+            await refreshUser();
+            isSetEditing(false);
+        } catch (err) {
+            const error = err as ApiError;
 
-                toast.error(result.message);
+            if (error.errors) {
+                Object.values(error.errors)
+                    .reverse()
+                    .forEach((error) => toast.error(String(error)));
+
                 return;
             }
 
-            toast.success(result.message ?? "Profile updated successfully");
-
-            await loadUser();
-
-            isSetEditing(false);
+            toast.error(error.message);
+            return;
+        } finally {
             setIsSaving(false);
         }
     };
 
-    const handleInputChange = (
-        field: keyof EditedProfile,
-        value: string,
-    ): void => {
+    const handleInputChange = (field: keyof Profile, value: string): void => {
         if (!editedProfile) return;
 
         setEditedProfile({
@@ -202,32 +216,40 @@ export default function ProfilePage() {
     }
 
     async function handleRemoveAvatar() {
-        const result = await removeAvatarAction();
+        setIsRemoving(true);
 
-        if (!result.success) {
-            toast.error(result.message);
+        try {
+            const message = await removeAvatarRequest();
+            await refreshUser();
+            toast.success(message);
+        } catch (err) {
+            const error = err as ApiError;
+            toast.error(error.message);
             return;
+        } finally {
+            setIsRemoving(false);
+            setIsRemoveDialogOpen(false);
         }
-        toast.success(result.message || "Profile photo removed");
-
-        await loadUser();
-        setIsRemoveDialogOpen(false);
     }
 
     async function confirmUpload(): Promise<void> {
         if (!selectedFile) return;
 
-        const result = await uploadAvatarAction(selectedFile);
+        setIsUploading(true);
 
-        if (!result.success) {
-            toast.error(result.message);
+        try {
+            const message = await uploadAvatarRequest(selectedFile);
+            await refreshUser();
+            toast.success(message);
+        } catch (err) {
+            const error = err as ApiError;
+            toast.error(error.message);
             return;
+        } finally {
+            setSelectedFile(null);
+            setIsUploading(false);
+            setIsUploadDialogOpen(false);
         }
-        toast.success("Profile photo updated");
-
-        await loadUser();
-        setSelectedFile(null);
-        setIsUploadDialogOpen(false);
     }
 
     async function handleLogout(): Promise<void> {
@@ -243,7 +265,19 @@ export default function ProfilePage() {
         }
     }
 
-    if (!profile) {
+    async function loadLogs() {
+        const data = await getLoginHistoryRequest();
+
+        setLoginLogs(data);
+    }
+
+    async function handleOpenLoginHistory() {
+        setIsLoginHistoryOpen(true);
+
+        if (loginLogs.length === 0) await loadLogs();
+    }
+
+    if (isInitializing) {
         return <div>Loading...</div>;
     }
 
@@ -279,7 +313,7 @@ export default function ProfilePage() {
                                 </Button>
                                 <Button
                                     onClick={handleSave}
-                                    disabled={isSaving}
+                                    disabled={isSaving || !hasChanges}
                                     className="gap-2"
                                 >
                                     <Save className="h-4 w-4" />
@@ -303,15 +337,15 @@ export default function ProfilePage() {
                                 <Avatar className="h-24 w-24 border-2 border-primary">
                                     <AvatarImage
                                         src={profile?.avatar || undefined}
-                                        alt={profile?.name}
+                                        alt={`${profile?.firstName} ${profile?.lastName}`}
                                     />
                                     <AvatarFallback>
-                                        {profile?.name.charAt(0)}
+                                        {`${profile?.firstName.charAt(0)}${profile?.lastName.charAt(0)}`}
                                     </AvatarFallback>
                                 </Avatar>
                                 <div className="text-center">
                                     <p className="font-semibold text-foreground">
-                                        {profile?.name}
+                                        {`${profile?.firstName} ${profile?.lastName}`}
                                     </p>
                                 </div>
                             </div>
@@ -325,20 +359,28 @@ export default function ProfilePage() {
                                     onChange={handleAvatarUpload}
                                 />
                                 <Button
+                                    disabled={isUploading}
                                     variant="outline"
                                     className="w-full gap-2"
-                                    onClick={() =>
-                                        fileInputRef.current?.click()
-                                    }
+                                    onClick={() => {
+                                        fileInputRef.current?.click();
+                                    }}
                                 >
-                                    Upload Photo
+                                    {isUploading
+                                        ? "Uploading..."
+                                        : "Upload Photo"}
                                 </Button>
                                 <Button
+                                    disabled={isRemoving || !profile?.avatar}
                                     variant="ghost"
                                     className="w-full text-destructive hover:text-destructive"
                                     onClick={() => setIsRemoveDialogOpen(true)}
                                 >
-                                    Remove Photo
+                                    {isRemoving
+                                        ? "Removing..."
+                                        : profile?.avatar
+                                          ? "Remove Photo"
+                                          : "No Photo to Remove"}
                                 </Button>
                             </div>
                         </CardContent>
@@ -357,17 +399,17 @@ export default function ProfilePage() {
                         </CardHeader>
                         <CardContent className="space-y-6">
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                {/* Full Name */}
+                                {/* First Name */}
                                 <div className="space-y-2">
                                     <Label className="text-sm font-medium">
-                                        Full Name
+                                        First Name
                                     </Label>
                                     {isEditing ? (
                                         <Input
-                                            value={editedProfile?.name}
+                                            value={editedProfile?.firstName}
                                             onChange={(e) =>
                                                 handleInputChange(
-                                                    "name",
+                                                    "firstName",
                                                     e.target.value,
                                                 )
                                             }
@@ -375,7 +417,30 @@ export default function ProfilePage() {
                                         />
                                     ) : (
                                         <div className="p-2.5 rounded-lg bg-secondary/30 text-foreground">
-                                            {profile?.name}
+                                            {profile?.firstName}
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Last Name */}
+                                <div className="space-y-2">
+                                    <Label className="text-sm font-medium">
+                                        Last Name
+                                    </Label>
+                                    {isEditing ? (
+                                        <Input
+                                            value={editedProfile?.lastName}
+                                            onChange={(e) =>
+                                                handleInputChange(
+                                                    "lastName",
+                                                    e.target.value,
+                                                )
+                                            }
+                                            className="bg-secondary/50 border-border"
+                                        />
+                                    ) : (
+                                        <div className="p-2.5 rounded-lg bg-secondary/30 text-foreground">
+                                            {profile?.lastName}
                                         </div>
                                     )}
                                 </div>
@@ -533,7 +598,7 @@ export default function ProfilePage() {
                             <Button
                                 variant="outline"
                                 className="w-full justify-start gap-2"
-                                onClick={() => setIsLoginHistoryOpen(true)}
+                                onClick={handleOpenLoginHistory}
                             >
                                 <Shield className="h-4 w-4" />
                                 View Login History
@@ -585,7 +650,7 @@ export default function ProfilePage() {
                         onClick={handleLogout}
                     >
                         <LogOut className="h-4 w-4" />
-                        Logout
+                        {isLoggingOut ? "Logging out..." : "Log out"}
                     </Button>
                 </div>
             </div>
