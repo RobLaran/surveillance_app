@@ -1,11 +1,11 @@
-import type { User, CurrentUser } from "@/features/auth/types/auth";
+import type { User, UserResponse } from "@/features/auth/types/user";
 
 import {
     formatAccountCreatedSince,
     formatLastLogin,
 } from "@/utils/format-date";
 
-export function formatUser(data: User): CurrentUser {
+export function formatUser(data: UserResponse): User {
     return {
         id: data.user_id,
         firstName: data.first_name,
