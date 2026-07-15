@@ -1,12 +1,14 @@
 import { request } from "@/lib/api-client";
 import { UpdateCurrentUserValues } from "@/features/profile/types/profile";
+import { LoginLog, LoginLogResponse } from "@/features/profile/types/login-log";
+import { formatLoginLog } from "../utils/format-login-log";
 
 type ChangePasswordValues = {
     current_password: string;
     new_password: string;
 };
 
-export async function uploadAvatar(file: File) {
+export async function uploadAvatarRequest(file: File): Promise<string> {
     const formData = new FormData();
     formData.append("avatar", file);
 
@@ -15,27 +17,25 @@ export async function uploadAvatar(file: File) {
     return message;
 }
 
-export async function removeAvatar(): Promise<string> {
+export async function removeAvatarRequest(): Promise<string> {
     const { message } = await request.delete("/api/avatars/me/remove");
 
     return message;
 }
 
-export async function getAvatar(): Promise<string> {
-    const { data } = await request.get<{ path: string; url: string }>(
-        "/api/avatars/me",
-    );
-    return data.url;
-}
-
-export async function updateCurrentUser(values: UpdateCurrentUserValues) {
+export async function updateCurrentUserRequest(
+    values: UpdateCurrentUserValues,
+): Promise<string> {
     const { message } = await request.put("/api/users/me/update", values);
 
     return message;
 }
 
-export async function getUserLoginLogs() {
-    return request.get("/api/login-logs/me");
+export async function getLoginHistoryRequest(): Promise<LoginLog[]> {
+    const { data } =
+        await request.get<LoginLogResponse[]>("/api/login-logs/me");
+
+    return data.map((log: LoginLogResponse) => formatLoginLog(log));
 }
 
 export async function changePasswordRequest(
