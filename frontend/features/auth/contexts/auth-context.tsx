@@ -18,7 +18,7 @@ import {
 } from "@/features/auth/services/auth-service";
 import { AUTH_STATUS } from "@/features/auth/constants/auth-status";
 import { formatUser } from "@/features/auth/utils/format-user";
-import { User } from "@/features/auth/types/auth";
+import { User } from "@/features/auth/types/user";
 
 type AuthContextType = {
     user: User | null;
