@@ -205,15 +205,34 @@ export default function ProfilePage() {
     async function handleAvatarUpload(
         event: React.ChangeEvent<HTMLInputElement>,
     ): Promise<void> {
-        const file = event.target.files?.[0];
+        try {
+            const file = event.target.files?.[0];
 
-        if (!file) return;
+            if (!file) return;
 
-        setSelectedFile(file);
+            const allowedTypes = [
+                "image/jpg",
+                "image/jpeg",
+                "image/png",
+                "image/webp",
+            ];
 
-        event.target.value = "";
+            if (!allowedTypes.includes(file.type)) {
+                toast.error("Please upload a JPG, JPEG, PNG, or WebP image.");
+                return;
+            }
 
-        setIsUploadDialogOpen(true);
+            const maxSize = 2 * 1024 * 1024;
+            if (file.size > maxSize) {
+                toast.error("File is too large! Maximum allowed is 2 MB.");
+                return;
+            }
+
+            setSelectedFile(file);
+            setIsUploadDialogOpen(true);
+        } finally {
+            event.target.value = "";
+        }
     }
 
     async function handleRemoveAvatar() {
@@ -355,7 +374,7 @@ export default function ProfilePage() {
                                 <input
                                     ref={fileInputRef}
                                     type="file"
-                                    accept="image/*"
+                                    accept=".png, .jpg, .jpeg, .webp"
                                     className="hidden"
                                     onChange={handleAvatarUpload}
                                 />
