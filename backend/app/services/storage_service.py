@@ -1,6 +1,6 @@
 import logging
 
-from cv2 import FileStorage
+from werkzeug.datastructures import FileStorage
 
 from app.core.supabase import supabase
 
