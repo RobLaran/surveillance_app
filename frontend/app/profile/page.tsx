@@ -263,6 +263,15 @@ export default function ProfilePage() {
             toast.success(message);
         } catch (err) {
             const error = err as ApiError;
+
+            if (error.errors) {
+                Object.values(error.errors)
+                    .reverse()
+                    .forEach((error) => toast.error(String(error)));
+
+                return;
+            }
+
             toast.error(error.message);
             return;
         } finally {
