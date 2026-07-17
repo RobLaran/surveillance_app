@@ -5,8 +5,8 @@ from flask_jwt_extended import (
 )
 
 from app.services.storage_service import get_user_avatar, remove_user_avatar, upload_user_avatar
-from app.core.exceptions import ValidationError
 from app.utils.responses import success_response
+from app.utils.storage.validators import validate_avatar_image
 
 storage = Blueprint('storage', __name__)
 
@@ -18,8 +18,7 @@ storage = Blueprint('storage', __name__)
 def upload_avatar():
     file = request.files.get("avatar")
 
-    if not file:
-        raise ValidationError(errors=["No file uploaded"])
+    validate_avatar_image(file)
 
     user_id = str(get_jwt_identity())
 
