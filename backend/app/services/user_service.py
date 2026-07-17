@@ -94,7 +94,6 @@ def _validate_new_password(
     if not verify_password(current_password, password_hash):
         raise ValidationError(
             errors={
-                "current_password":
                 "Current password is incorrect"
             }
         )
@@ -102,7 +101,6 @@ def _validate_new_password(
     if verify_password(new_password, password_hash):
         raise ValidationError(
             errors={
-                "new_password":
                 "New password cannot be the same as the current password"
             }
         )
@@ -116,7 +114,7 @@ def change_user_password(
     if not user_id:
         raise NotFoundError("No user id")
     elif not data:
-        raise ValidationError(errors={ "data": "Request body is required" })
+        raise ValidationError(errors={ "Request body is required" })
     
     data = sanitize_change_password_fields(data)
 
