@@ -79,6 +79,8 @@ const editableFields = [
     "location",
 ] as const;
 
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 export default function ProfilePage() {
     const router = useRouter();
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -99,6 +101,7 @@ export default function ProfilePage() {
     const [isUploading, setIsUploading] = useState(false);
     const [isRemoving, setIsRemoving] = useState(false);
     const [loginLogs, setLoginLogs] = useState<LoginLog[]>([]);
+    const [isLoadingLogs, setIsLoadingLogs] = useState(false);
 
     const hasChanges =
         profile != null &&
@@ -295,9 +298,17 @@ export default function ProfilePage() {
     }
 
     async function loadLogs() {
-        const data = await getLoginHistoryRequest();
+        setIsLoadingLogs(true);
 
-        setLoginLogs(data);
+        try {
+            const [logs] = await Promise.all([
+                getLoginHistoryRequest(),
+                delay(1500),
+            ]);
+            setLoginLogs(logs);
+        } finally {
+            setIsLoadingLogs(false);
+        }
     }
 
     async function handleOpenLoginHistory() {
@@ -752,6 +763,7 @@ export default function ProfilePage() {
                 open={isLoginHistoryOpen}
                 onOpenChange={setIsLoginHistoryOpen}
                 loginHistory={loginLogs}
+                isLoading={isLoadingLogs}
             />
 
             {/* Change Password Dialog */}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import {
     Dialog,
     DialogContent,
@@ -24,12 +24,14 @@ interface LoginHistoryDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     loginHistory: LoginLog[];
+    isLoading: boolean;
 }
 
 export function LoginHistoryDialog({
     open,
     onOpenChange,
     loginHistory,
+    isLoading,
 }: LoginHistoryDialogProps) {
     const formatDate = (date: string) => {
         return new Date(date).toLocaleDateString("en-US", {
@@ -96,42 +98,61 @@ export function LoginHistoryDialog({
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {loginHistory.map((login) => (
-                                <TableRow
-                                    key={login.id}
-                                    className="border-border hover:bg-secondary/20"
-                                >
-                                    <TableCell className="text-xs py-2 px-2 text-foreground">
-                                        {formatDate(login.createdAt)}
-                                    </TableCell>
-                                    <TableCell className="text-xs py-2 px-2 text-muted-foreground">
-                                        {formatTime(login.createdAt)}
-                                    </TableCell>
-                                    <TableCell className="text-xs py-2 px-2 font-mono text-primary">
-                                        {login.ipAddress}
-                                    </TableCell>
-                                    <TableCell className="text-xs py-2 px-2 text-foreground truncate">
-                                        {login.device}
-                                    </TableCell>
-                                    <TableCell className="text-xs py-2 px-2 text-foreground truncate">
-                                        {login.browser} • {login.os}
-                                    </TableCell>
-                                    <TableCell className="text-xs py-2 px-2">
-                                        <Badge
-                                            className={`${getStatusColor(login.status)} text-xs py-0 px-1`}
-                                        >
-                                            {login.status === "SUCCESS" ? (
-                                                <CheckCircle className="h-3 w-3 mr-1" />
-                                            ) : (
-                                                <XCircle className="h-3 w-3 mr-1" />
-                                            )}
-                                            {login.status === "SUCCESS"
-                                                ? "OK"
-                                                : "Failed"}
-                                        </Badge>
+                            {isLoading ? (
+                                <TableRow>
+                                    <TableCell colSpan={6} className="h-40">
+                                        <div className="flex justify-center">
+                                            <LoadingSpinner />
+                                        </div>
                                     </TableCell>
                                 </TableRow>
-                            ))}
+                            ) : loginHistory.length === 0 ? (
+                                <TableRow>
+                                    <TableCell
+                                        colSpan={6}
+                                        className="text-center text-muted-foreground h-32"
+                                    >
+                                        No login history found.
+                                    </TableCell>
+                                </TableRow>
+                            ) : (
+                                loginHistory.map((login) => (
+                                    <TableRow
+                                        key={login.id}
+                                        className="border-border hover:bg-secondary/20"
+                                    >
+                                        <TableCell className="text-xs py-2 px-2 text-foreground">
+                                            {formatDate(login.createdAt)}
+                                        </TableCell>
+                                        <TableCell className="text-xs py-2 px-2 text-muted-foreground">
+                                            {formatTime(login.createdAt)}
+                                        </TableCell>
+                                        <TableCell className="text-xs py-2 px-2 font-mono text-primary">
+                                            {login.ipAddress}
+                                        </TableCell>
+                                        <TableCell className="text-xs py-2 px-2 text-foreground truncate">
+                                            {login.device}
+                                        </TableCell>
+                                        <TableCell className="text-xs py-2 px-2 text-foreground truncate">
+                                            {login.browser} • {login.os}
+                                        </TableCell>
+                                        <TableCell className="text-xs py-2 px-2">
+                                            <Badge
+                                                className={`${getStatusColor(login.status)} text-xs py-0 px-1`}
+                                            >
+                                                {login.status === "SUCCESS" ? (
+                                                    <CheckCircle className="h-3 w-3 mr-1" />
+                                                ) : (
+                                                    <XCircle className="h-3 w-3 mr-1" />
+                                                )}
+                                                {login.status === "SUCCESS"
+                                                    ? "OK"
+                                                    : "Failed"}
+                                            </Badge>
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                            )}
                         </TableBody>
                     </Table>
                 </div>
