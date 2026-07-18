@@ -1,106 +1,130 @@
 import cv2
 import io
-import numpy as np
 
 from flask import Blueprint, Response, jsonify
-from app.core.video_stream import generate_frames
+from flask_jwt_extended import get_jwt_identity, jwt_required
+from app.core.stream import generate_frames
 from app.core.camera_monitor import is_online
 from app.core.frame_cache import get_frame
 from app.services.camera_service import (
-    get_all_cameras,
-    get_camera,
-    update_camera_status,
+    get_camera_details,
+    get_camera_list,
+    get_user_camera_list,
     update_camera_field
 )
+from app.repositories.camera_repository import update_camera_status
+from app.utils.responses import success_response
+from app.core.camera_manager import start_camera
+from app.core.exceptions import NotFoundError, ValidationError
+from app.utils.cameras.camera import open_camera
 
 cameras = Blueprint('cameras', __name__)
 
 # =========================
 # VIDEO STREAM
 # =========================
-@cameras.route('/video/<int:camera_id>')
+@cameras.route('/api/cameras/<int:camera_id>/video', methods=["GET"])
+@jwt_required()
 def video_feed(camera_id):
-    camera = get_camera(camera_id)
-    if not camera:
-        return jsonify({"error": f"Camera {camera_id} not found"}), 404
-    
-    try:
-        online = is_online(camera)
+    user_id = str(get_jwt_identity())
+    worker = start_camera(user_id, camera_id)
+    worker.viewers += 1
 
-        if not online:
-            return jsonify({
-                "id": camera_id,
-                "name": camera["name"],
-                "status": "offline",
-                "online": False,
-                "message": "[ERROR] Camera is offline"
-            }), 200 
-
-        return Response(
-            generate_frames(camera_id),
-            mimetype='multipart/x-mixed-replace; boundary=frame'
-        )
-    except Exception as e:
-        print(f"[ERROR] Status check failed for camera {camera_id}: {e}")
-        return jsonify({
-            "id": camera_id,
-            "name": camera["name"],
-            "status": "offline",
-            "online": False,
-        }), 200 
-
+    return Response(
+        response=generate_frames(worker, camera_id),
+        status=200,
+        mimetype='multipart/x-mixed-replace; boundary=frame'
+    )
     
 
 # =========================
 # CAMERA LIST
 # =========================
-@cameras.route('/cameras')
-def list_cameras():
+@cameras.route('/api/cameras')
+@jwt_required()
+def camera_list():
     """Returns all cameras from the database."""
-    cameras = get_all_cameras()
-    return jsonify(cameras)
+    camera_list = get_camera_list()
+    return success_response(
+        message="Fetched all cameras successfully",
+        data=camera_list
+    )
+
+# =========================
+# USER CAMERA LIST
+# =========================
+@cameras.route('/api/cameras/me')
+@jwt_required()
+def me_camera_list():
+    """Returns all cameras from the database."""
+    user_id = str(get_jwt_identity())
+    camera_list = get_user_camera_list(user_id)
+    return success_response(
+        message="Fetched user cameras successfully",
+        data=camera_list
+    )
 
 # =========================
 # SINGLE CAMERA
 # =========================
-@cameras.route('/cameras/<int:camera_id>')
-def camera_detail(camera_id):
+@cameras.route('/api/cameras/<int:camera_id>')
+@jwt_required()
+def camera_details(camera_id: int):
     """Returns a single camera's details."""
-    camera = get_camera(camera_id)
-    if not camera:
-        return jsonify({"error": f"Camera {camera_id} not found"}), 404
-    return jsonify(camera)
+    camera_details = get_camera_details(camera_id)
+    return success_response(
+        message="Fetched camera details successfully",
+        data=camera_details
+    )
 
 # =========================
 # CAMERA STATUS CHECK
 # =========================
-@cameras.route('/cameras/<int:camera_id>/status')
+@cameras.route('/api/cameras/<int:camera_id>/status',  methods=["GET"])
+@jwt_required()
 def camera_status(camera_id):
     """Checks if a camera stream is accessible and updates DB."""
-    camera = get_camera(camera_id)
+    user_id = str(get_jwt_identity())
+    if not user_id:
+        raise NotFoundError("No user id found")
+
+    camera = get_camera_details(camera_id)
     if not camera:
-        return jsonify({"error": f"Camera {camera_id} not found"}), 404
+        raise NotFoundError(f"No camera {camera_id} found")
+    
+    source = str(camera["camera_stream_url"])
 
-    try:
-        online = is_online(camera)
-        status = "online" if online else "offline"
-        update_camera_status(camera_id, status)
+    if not source:
+        raise ValidationError("No stream url")
 
-        return jsonify({
-            "id": camera_id,
-            "name": camera["name"],
-            "status": status,
-            "online": online,
-        })
-    except Exception as e:
-        print(f"[ERROR] Status check failed for camera {camera_id}: {e}")
-        update_camera_status(camera_id, "offline")
-        return jsonify({
-            "id": camera_id,
-            "name": camera["name"],
-            "status": "offline",
-            "online": False,
-        }), 200  # still 200 so the frontend handles it gracefully
+    print(f"Opening camera {camera_id}")
+    cap = open_camera(source)
+
+    data = None
+
+    if cap is None:
+        print(f"Failed to open camera {camera_id}")
+        data = update_camera_status(
+            user_id=user_id, 
+            camera_id=int(camera_id), 
+            status="offline"
+        )
+        return success_response(
+            message="Camera status is offline",
+            data=data
+        )
+
+    data = update_camera_status(
+        user_id=user_id, 
+        camera_id=camera_id, 
+        status="online"
+    )
+
+    return success_response(
+        message="Camera status is online",
+        data=data
+    )
+
 
 # =========================
 # TOGGLE AI
@@ -108,7 +132,7 @@ def camera_status(camera_id):
 @cameras.route('/cameras/<int:camera_id>/ai', methods=['POST'])
 def toggle_ai(camera_id):
     """Toggles AI processing for a camera."""
-    camera = get_camera(camera_id)
+    camera = get_camera_details(camera_id)
     if not camera:
         return jsonify({"error": f"Camera {camera_id} not found"}), 404
 
@@ -125,7 +149,7 @@ def toggle_ai(camera_id):
 # =========================
 @cameras.route('/cameras/<int:camera_id>/thumbnail')
 def camera_thumbnail(camera_id):
-    camera = get_camera(camera_id)
+    camera = get_camera_details(camera_id)
     if not camera:
         return jsonify({"error": f"Camera {camera_id} not found"}), 404
 
